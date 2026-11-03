@@ -13,7 +13,6 @@ export function ProductCard({ product }: { product: Product }) {
   const outOfStock = product.stock === 0;
   const hasVariants = product.variants.length > 0;
   const mainImage = product.images.find((img) => img.is_main) ?? product.images[0];
-  // Le thème fait apparaître la 2e photo au survol de la vignette.
   const hoverImage = product.images.find((img) => img.id !== mainImage?.id);
 
   const quickAdd = () => {
@@ -32,20 +31,39 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-shadow duration-300 hover:shadow-card">
+    <article
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card",
+        "transition-all duration-300 ease-out",
+        "hover:-translate-y-1 hover:border-border hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)]",
+        outOfStock && "opacity-95",
+      )}
+    >
       <div className="relative overflow-hidden bg-surface">
-        <div className="absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1.5">
+        {/* Badges */}
+        <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
           {isOnSale(product) && (
-            <span className="craft-label craft-label-sale">-{discountPercent(product)}%</span>
+            <span className="craft-label craft-label-sale shadow-sm ring-1 ring-black/5">
+              -{discountPercent(product)}%
+            </span>
           )}
-          {product.is_new && <span className="craft-label craft-label-new">Nouveau</span>}
-          {outOfStock && <span className="craft-label craft-label-muted">Rupture</span>}
+          {product.is_new && (
+            <span className="craft-label craft-label-new shadow-sm ring-1 ring-black/5">
+              Nouveau
+            </span>
+          )}
+          {outOfStock && (
+            <span className="craft-label craft-label-muted shadow-sm ring-1 ring-black/5">
+              Rupture
+            </span>
+          )}
         </div>
 
+        {/* Image */}
         <Link
           to="/produit/$slug"
           params={{ slug: product.slug }}
-          className="relative block aspect-square"
+          className="relative block aspect-square overflow-hidden"
           aria-label={product.name}
         >
           <img
@@ -53,7 +71,8 @@ export function ProductCard({ product }: { product: Product }) {
             alt={mainImage?.alt ?? product.name}
             loading="lazy"
             className={cn(
-              "h-full w-full object-cover transition-opacity duration-500",
+              "h-full w-full object-cover transition-all duration-700 ease-out",
+              "group-hover:scale-[1.04]",
               hoverImage && "group-hover:opacity-0",
             )}
           />
@@ -63,69 +82,89 @@ export function ProductCard({ product }: { product: Product }) {
               alt=""
               aria-hidden="true"
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
             />
           )}
+          {/* Dégradé subtil en bas pour lisibilité du prix au survol */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         </Link>
 
-        {/* Colonne d'actions rondes, qui glisse depuis la droite au survol */}
-        <div className="absolute right-2.5 top-2.5 z-10 flex flex-col gap-2">
+        {/* Actions rapides */}
+        <div className="absolute right-3 top-3 z-10 flex flex-col gap-2">
           <button
             type="button"
             aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
             onClick={() => toggleWishlist(product.id)}
             className={cn(
-              "grid h-9 w-9 place-items-center rounded-full border border-border bg-card/90 text-foreground shadow-sm transition-all duration-300 hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground",
+              "grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-card/95 backdrop-blur",
+              "text-foreground shadow-sm transition-all duration-300",
+              "hover:scale-105 hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50",
               liked && "border-accent-strong bg-accent-strong text-accent-strong-foreground",
             )}
           >
-            <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+            <Heart className={cn("h-4 w-4 transition-transform", liked && "fill-current scale-110")} />
           </button>
           <Link
             to="/produit/$slug"
             params={{ slug: product.slug }}
             aria-label="Voir le produit"
-            className="grid h-9 w-9 translate-x-2 place-items-center rounded-full border border-border bg-card/90 text-foreground shadow-sm opacity-0 transition-all duration-300 hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground group-hover:translate-x-0 group-hover:opacity-100"
+            className={cn(
+              "grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-card/95 backdrop-blur",
+              "text-foreground shadow-sm",
+              "translate-x-3 opacity-0 transition-all duration-300",
+              "hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground",
+              "group-hover:translate-x-0 group-hover:opacity-100",
+              "focus-visible:translate-x-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50",
+            )}
           >
             <Eye className="h-4 w-4" />
           </Link>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <div className="flex flex-1 flex-col gap-1 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           {product.brand}
         </p>
+
         <Link
           to="/produit/$slug"
           params={{ slug: product.slug }}
-          className="mt-1.5 line-clamp-2 font-display text-base font-semibold leading-6 text-foreground transition-colors hover:text-accent-strong"
+          className="mt-0.5 line-clamp-2 font-display text-[15px] font-semibold leading-6 text-foreground transition-colors hover:text-accent-strong"
         >
           {product.name}
         </Link>
 
-        <div className="mt-2 flex items-center gap-1.5">
+        <div className="mt-1.5 flex items-center gap-1.5">
           <Stars value={product.rating} />
           <span className="text-xs text-muted-foreground">({product.reviews_count})</span>
         </div>
 
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="font-display text-lg font-semibold text-accent-strong">
+          <span className="font-display text-lg font-semibold tracking-tight text-accent-strong">
             {formatPrice(product.price)}
           </span>
           {isOnSale(product) && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/60">
               {formatPrice(product.compare_at_price!)}
             </span>
           )}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-3.5">
           {hasVariants && !outOfStock ? (
             <Link
               to="/produit/$slug"
               params={{ slug: product.slug }}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-accent text-xs font-bold uppercase tracking-[0.1em] text-accent-foreground transition-colors hover:bg-accent-strong hover:text-accent-strong-foreground"
+              className={cn(
+                "flex h-10 w-full items-center justify-center gap-2 rounded-lg",
+                "bg-accent text-xs font-bold uppercase tracking-[0.1em] text-accent-foreground",
+                "transition-all duration-300",
+                "hover:bg-accent-strong hover:text-accent-strong-foreground hover:shadow-md",
+                "active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50",
+              )}
             >
               <ShoppingCart className="h-4 w-4" />
               Choisir
@@ -135,7 +174,15 @@ export function ProductCard({ product }: { product: Product }) {
               type="button"
               disabled={outOfStock}
               onClick={quickAdd}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-accent text-xs font-bold uppercase tracking-[0.1em] text-accent-foreground transition-colors hover:bg-accent-strong hover:text-accent-strong-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-accent disabled:hover:text-accent-foreground"
+              className={cn(
+                "flex h-10 w-full items-center justify-center gap-2 rounded-lg",
+                "bg-accent text-xs font-bold uppercase tracking-[0.1em] text-accent-foreground",
+                "transition-all duration-300",
+                "hover:bg-accent-strong hover:text-accent-strong-foreground hover:shadow-md",
+                "active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50",
+                "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-accent disabled:hover:text-accent-foreground disabled:hover:shadow-none disabled:active:scale-100",
+              )}
             >
               <ShoppingCart className="h-4 w-4" />
               {outOfStock ? "Indisponible" : "Ajouter"}
@@ -149,13 +196,13 @@ export function ProductCard({ product }: { product: Product }) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
       <div className="aspect-square animate-pulse bg-surface" />
       <div className="space-y-3 p-4">
         <div className="h-3 w-16 animate-pulse rounded bg-surface" />
         <div className="h-4 w-full animate-pulse rounded bg-surface" />
         <div className="h-4 w-2/3 animate-pulse rounded bg-surface" />
-        <div className="h-10 w-full animate-pulse rounded-md bg-surface" />
+        <div className="h-10 w-full animate-pulse rounded-lg bg-surface" />
       </div>
     </div>
   );
