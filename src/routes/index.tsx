@@ -16,13 +16,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Artisanat : Boutique tunisienne" },
+      { title: "Maison Mode : Boutique tunisienne" },
       {
         name: "description",
         content:
-          "Découvrez l'artisanat tunisien : décoration, poterie, textile et créations locales. Paiement à la livraison partout en Tunisie.",
+          "Découvrez l'Maison Mode tunisien : décoration, poterie, textile et créations locales. Paiement à la livraison partout en Tunisie.",
       },
-      { property: "og:title", content: "Artisanat : Boutique tunisienne" },
+      { property: "og:title", content: "Maison Mode : Boutique tunisienne" },
       {
         property: "og:description",
         content: "Décoration, poterie, textile et créations locales. Paiement à la livraison.",

@@ -34,7 +34,7 @@ function Logo({ className }: { className?: string }) {
   return (
     <Link to="/" className={className}>
       <span className="font-display text-2xl font-semibold tracking-tight">
-        Arti<span className="text-accent-strong">sanat</span>
+        Maison <span className="text-accent-strong">Mode</span>
       </span>
     </Link>
   );

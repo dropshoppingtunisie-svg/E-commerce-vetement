@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/compte")({
   head: () => ({
     meta: [
-      { title: "Mon compte : Artisanat" },
-      { name: "description", content: "Gérez vos informations, vos commandes, vos adresses et vos favoris Artisanat." },
-      { property: "og:title", content: "Mon compte : Artisanat" },
-      { property: "og:description", content: "Espace client Artisanat." },
+      { title: "Mon compte : Maison Mode" },
+      { name: "description", content: "Gérez vos informations, vos commandes, vos adresses et vos favoris Maison Mode." },
+      { property: "og:title", content: "Mon compte : Maison Mode" },
+      { property: "og:description", content: "Espace client Maison Mode." },
     ],
   }),
   component: AccountLayout,

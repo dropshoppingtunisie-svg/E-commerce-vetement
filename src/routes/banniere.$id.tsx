@@ -13,9 +13,9 @@ export const Route = createFileRoute("/banniere/$id")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Bannière introuvable — Artisanat" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Bannière introuvable — Maison Mode" }, { name: "robots", content: "noindex" }] };
     }
-    const title = `${loaderData.banner.title || "Sélection"} — Artisanat`;
+    const title = `${loaderData.banner.title || "Sélection"} — Maison Mode`;
     const description =
       loaderData.banner.subtitle || `Découvrez la sélection ${loaderData.banner.title || "du moment"}.`;
     return {

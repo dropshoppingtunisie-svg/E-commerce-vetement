@@ -31,8 +31,8 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
-const GUEST_CART_KEY = "artisanat:cart:guest";
-const userCartKey = (userId: string) => `artisanat:cart:user:${userId}`;
+const GUEST_CART_KEY = "Maison Mode:cart:guest";
+const userCartKey = (userId: string) => `Maison Mode:cart:user:${userId}`;
 
 function readCart(key: string): CartItem[] {
   if (typeof window === "undefined") return [];

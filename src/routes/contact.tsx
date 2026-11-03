@@ -12,10 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact  Artisanat" },
+      { title: "Contact  Maison Mode" },
       { name: "description", content: "Une question sur une commande ou un produit ? Notre équipe vous répond 6j/7." },
-      { property: "og:title", content: "Contact Artisanat" },
-      { property: "og:description", content: "Contactez le service client Artisanat." },
+      { property: "og:title", content: "Contact Maison Mode" },
+      { property: "og:description", content: "Contactez le service client Maison Mode." },
     ],
   }),
   component: ContactPage,

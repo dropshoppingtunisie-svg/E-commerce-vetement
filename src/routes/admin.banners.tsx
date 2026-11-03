@@ -286,7 +286,7 @@ function AdminBanners() {
               </div>
               <div className="space-y-2">
                 <Label>Sous-titre (optionnel)</Label>
-                <Input value={draft.subtitle ?? ""} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} placeholder="Découvrez nos pièces artisanales" />
+                <Input value={draft.subtitle ?? ""} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} placeholder="Découvrez nos pièces" />
               </div>
               <div className="space-y-2">
                 {/* <Label>Lien automatique</Label>

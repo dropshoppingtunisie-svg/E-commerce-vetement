@@ -55,9 +55,9 @@ function orderErrorMessage(error: any): string {
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Commande — Paiement à la livraison | Artisanat" },
-      { name: "description", content: "Finalisez votre commande Artisanat : adresse de livraison, code promo et paiement à la livraison." },
-      { property: "og:title", content: "Commande — Artisanat" },
+      { title: "Commande — Paiement à la livraison | Maison Mode" },
+      { name: "description", content: "Finalisez votre commande Maison Mode : adresse de livraison, code promo et paiement à la livraison." },
+      { property: "og:title", content: "Commande — Maison Mode" },
       { property: "og:description", content: "Paiement à la livraison partout en Tunisie." },
       { name: "robots", content: "noindex" },
     ],

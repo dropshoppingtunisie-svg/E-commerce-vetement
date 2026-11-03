@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 export const Route = createFileRoute("/mot-de-passe-oublie")({
   head: () => ({
-    meta: [{ title: "Mot de passe oublié : Artisanat" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Mot de passe oublié : Maison Mode" }, { name: "robots", content: "noindex" }],
   }),
   component: ForgotPasswordPage,
 });

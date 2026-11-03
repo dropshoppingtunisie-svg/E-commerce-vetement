@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabaseClient";
 export const Route = createFileRoute("/reinitialiser-mot-de-passe")({
   head: () => ({
     meta: [
-      { title: "Réinitialiser le mot de passe : Artisanat" },
+      { title: "Réinitialiser le mot de passe : Maison Mode" },
       { name: "robots", content: "noindex" },
     ],
   }),

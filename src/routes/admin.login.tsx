@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
-    meta: [{ title: "Admin Login — Artisanat" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Admin Login — Maison Mode" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminLogin,
 });

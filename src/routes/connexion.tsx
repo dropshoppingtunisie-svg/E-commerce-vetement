@@ -15,7 +15,7 @@ export const Route = createFileRoute("/connexion")({
     return isSafeRedirect(redirect) ? { redirect } : {};
   },
   head: () => ({
-    meta: [{ title: "Connexion : Artisanat" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Connexion : Maison Mode" }, { name: "robots", content: "noindex" }],
   }),
   component: LoginRedirect,
 });

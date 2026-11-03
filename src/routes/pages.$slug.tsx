@@ -40,8 +40,8 @@ const pages: Record<string, { title: string; intro: string; sections: PageSectio
     title: "Mentions légales",
     intro: "Informations relatives à l'éditeur du site (contenu de démonstration).",
     sections: [
-      { heading: "Éditeur", body: "Artisanat SARL — Avenue Habib Bourguiba, Tunis, Tunisie. Matricule fiscal : 0000000/X/X/000." },
-      { heading: "Contact", body: "contact@Artisanat.tn — +216 71 000 000" },
+      { heading: "Éditeur", body: "Maison Mode SARL — Avenue Habib Bourguiba, Tunis, Tunisie. Matricule fiscal : 0000000/X/X/000." },
+      { heading: "Contact", body: "contact@Maison Mode.tn — +216 71 000 000" },
       { heading: "Hébergement", body: "Site hébergé sur une infrastructure cloud européenne." },
     ],
   },
@@ -59,7 +59,7 @@ const pages: Record<string, { title: string; intro: string; sections: PageSectio
 pages["confidentialite"] = {
   title: "Politique de confidentialité",
   intro:
-    "Dernière mise à jour : 24 août 2026. La protection de vos données personnelles est une priorité pour Artisanat. Nous nous engageons à traiter vos informations avec la plus grande confidentialité et transparence.",
+    "Dernière mise à jour : 24 août 2026. La protection de vos données personnelles est une priorité pour Maison Mode. Nous nous engageons à traiter vos informations avec la plus grande confidentialité et transparence.",
   sections: [
     {
       heading: "Données collectées",
@@ -112,7 +112,7 @@ pages["remboursement"] = {
     },
     {
       heading: "Frais de retour",
-      body: "Les frais de retour sont à la charge du client, sauf en cas d'erreur de notre part (produit incorrect ou défectueux). Dans ce cas, Artisanat prend en charge l'intégralité des frais de renvoi.",
+      body: "Les frais de retour sont à la charge du client, sauf en cas d'erreur de notre part (produit incorrect ou défectueux). Dans ce cas, Maison Mode prend en charge l'intégralité des frais de renvoi.",
     },
   ],
 };
@@ -125,9 +125,9 @@ export const Route = createFileRoute("/pages/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Page introuvable : Artisanat" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Page introuvable : Maison Mode" }, { name: "robots", content: "noindex" }] };
     }
-    const title = `${loaderData.title} : Artisanat`;
+    const title = `${loaderData.title} : Maison Mode`;
     return {
       meta: [
         { title },
@@ -144,7 +144,7 @@ function StaticPage() {
   const { slug } = Route.useParams();
   const page = pages[slug]!;
   const { settings } = useSiteSettings();
-  const contactEmail = settings?.email?.trim() || "contact@artisanat.tn";
+  const contactEmail = settings?.email?.trim() || "contact@Maison Mode.tn";
 
   return (
     <StoreLayout>

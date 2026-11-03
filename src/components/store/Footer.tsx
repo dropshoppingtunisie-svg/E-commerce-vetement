@@ -45,10 +45,10 @@ export function Footer() {
       <div className="container-page grid gap-4 py-12 md:grid-cols-[1.35fr_1fr_1.2fr_1fr]">
         <div>
           <span className="font-display text-2xl font-semibold tracking-tight text-deep-foreground">
-            Arti<span className="text-ocre">sanat</span>
+            Maison <span className="text-ocre">Mode</span>
           </span>
           <p className="mt-3 text-sm text-deep-foreground/70">
-            Découvrez l’artisanat tunisien à travers des créations authentiques, sélectionnées avec
+            Découvrez l’Maison Mode tunisien à travers des créations authentiques, sélectionnées avec
             soin et livrées chez vous partout en Tunisie.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-deep-foreground/70">
@@ -130,7 +130,7 @@ export function Footer() {
 
       <div className="border-t border-deep-foreground/15 py-5">
         <p className="container-page text-center text-xs text-deep-foreground/60">
-          © 2026 Artisanat 
+          © 2026 Maison Mode 
         </p>
       </div>
     </footer>
