@@ -44,7 +44,8 @@ export function AuthDialog() {
   const finish = (message: string) => {
     toast.success(message);
     closeAuth();
-    if (authDialog.redirect) navigate({ to: authDialog.redirect as "/compte" });
+    const target = authDialog.redirect || "/compte";
+    navigate({ to: target as "/compte" });
   };
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -138,7 +139,7 @@ export function AuthDialog() {
       toast.error(message);
       return;
     }
-    finish("Compte créé : vérifiez votre e-mail pour confirmer votre adresse.");
+    finish("Votre compte a été créé avec succès.");
   };
 
   return (

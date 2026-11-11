@@ -128,37 +128,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: res.error };
   }
 
- async function signUp(email: string, password: string, attrs?: Partial<Profile>, captchaToken?: string) {
-  // supabase-js v2 : signUp prend UN SEUL objet, avec `options.data` pour les
-  // métadonnées utilisateur et `options.captchaToken` (camelCase) pour hCaptcha.
-  // exactOptionalPropertyTypes:true oblige à omettre la clé plutôt que de la
-  // mettre à `undefined`.
+
+async function signUp(
+  email: string,
+  password: string,
+  attrs?: Partial<Profile>,
+  captchaToken?: string
+) {
   const res = await supabase.auth.signUp({
     email,
     password,
     options: {
-      ...(attrs ? { data: attrs } : {}),
+      data: {
+        ...attrs,
+        role: "customer", // Rôle imposé pour chaque nouvelle inscription
+      },
       ...(captchaToken ? { captchaToken } : {}),
       emailRedirectTo: `${window.location.origin}/compte`,
     },
   });
 
-  if (res.error) console.error("signUp error:", res.error, "response:", res.data);
+  if (res.error) {
+    console.error("signUp error:", res.error, "response:", res.data);
+    return { error: res.error };
+  }
+
   const u = res.data?.user ?? null;
-  if (!res.error && u) {
+
+  if (u) {
     setPendingSignup(Boolean(!res.data.session));
+
     try {
-      const { data: p, error: fetchErr } = await supabase.from("profiles").select("*").eq("id", u.id).maybeSingle();
+      const { data: p, error: fetchErr } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", u.id)
+        .maybeSingle();
+
       if (fetchErr) {
-        console.warn("Could not fetch profile after signUp (likely awaiting DB trigger):", fetchErr);
+        console.warn("Could not fetch profile:", fetchErr);
       }
+
       setProfile(p ?? null);
     } catch (err) {
       console.warn("Profile read failed after signUp:", err);
     }
   }
-  return { error: res.error };
+
+  return { error: null };
 }
+
+async function resetPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  return { error };
+}
+
+async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  return { error };
+}
+
 
   async function signOut() {
     await supabase.auth.signOut();
