@@ -21,7 +21,6 @@ import { Route as InscriptionRouteImport } from './routes/inscription'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminBannersRouteImport } from './routes/admin.banners'
@@ -99,11 +98,6 @@ const PromotionsRoute = PromotionsRouteImport.update({
 const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
   id: '/reinitialiser-mot-de-passe',
   path: '/reinitialiser-mot-de-passe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -210,7 +204,6 @@ export interface FileRoutesByFullPath {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -241,7 +234,6 @@ export interface FileRoutesByTo {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -275,7 +267,6 @@ export interface FileRoutesById {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -310,7 +301,6 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
-    | '/reset-password'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -341,7 +331,6 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
-    | '/reset-password'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -374,7 +363,6 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
-    | '/reset-password'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -408,7 +396,6 @@ export interface RootRouteChildren {
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PromotionsRoute: typeof PromotionsRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   BanniereIdRoute: typeof BanniereIdRoute
   CategorieSlugRoute: typeof CategorieSlugRoute
   PagesSlugRoute: typeof PagesSlugRoute
@@ -499,13 +486,6 @@ declare module '@tanstack/react-router' {
       path: '/reinitialiser-mot-de-passe'
       fullPath: '/reinitialiser-mot-de-passe'
       preLoaderRoute: typeof ReinitialiserMotDePasseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -695,7 +675,6 @@ const rootRouteChildren: RootRouteChildren = {
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   PromotionsRoute: PromotionsRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   BanniereIdRoute: BanniereIdRoute,
   CategorieSlugRoute: CategorieSlugRoute,
   PagesSlugRoute: PagesSlugRoute,
