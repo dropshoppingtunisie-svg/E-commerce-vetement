@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ImagePlus, Package, Edit2, Plus, Trash2, X, Eye } from "lucide-react";
+import { ImagePlus, Package, Edit2, Plus, Trash2, X, Eye, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadToBucket, deleteFromBucket } from "@/lib/storage";
@@ -779,182 +779,455 @@ function AdminProducts() {
     setDraft({ ...draft, variants: next.map((v, i) => ({ ...v, position: i })) });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div>
-          <h1 className="text-2xl font-bold">Produits</h1>
-          <p className="text-sm text-muted-foreground">{list.length} produits au catalogue.</p>
-        </div>
+return (
+  <div className="min-h-screen space-y-6 pb-8">
 
-        <div className="mt-8 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className="w-80 sm:w-96" />
-            <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
-              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les stocks</SelectItem>
-                <SelectItem value="in">En stock (&gt;5)</SelectItem>
-                <SelectItem value="low">Faible (&le;5)</SelectItem>
-                <SelectItem value="out">Rupture</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as any)}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-              <SelectContent className="max-h-72">
-                <SelectItem value="all">Toutes catégories</SelectItem>
-                {Object.entries(categoriesMap).map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
-              </SelectContent>
-            </Select>
+    {/* HEADER */}
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="absolute -right-12 -top-16 h-52 w-52 rounded-full bg-accent/10 blur-3xl" />
+
+      <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent-strong">
+            <Package className="h-7 w-7" />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={refresh} title="Rafraîchir" style={{ border: "1px solid", borderColor: "hsl(240, 3.7%, 15.9%)" }}>
-              ↻
-            </Button>
-              <Button variant="accent" onClick={() => { setDraft(emptyProduct); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }}>
-              <Plus className="h-4 w-4" /> Nouveau produit
-            </Button>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Gestion des produits</h1>
+              <span className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent-strong">
+                Catalogue
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Gérez vos produits, leurs variantes, leurs prix et leurs stocks.
+            </p>
           </div>
         </div>
+
+        <Button
+          variant="accent"
+          className="h-11 gap-2 rounded-xl px-5 shadow-sm"
+          onClick={() => {
+            setDraft(emptyProduct);
+            setRemovedAttributeIds([]);
+            setShowRequiredErrors(false);
+            setOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Nouveau produit
+        </Button>
+      </div>
+    </div>
+
+    {/* STATISTICS */}
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Total produits</span>
+          <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-500">
+            <Package className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="mt-3 text-3xl font-bold tabular-nums">{list.length}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Produits dans le catalogue</p>
       </div>
 
-      <div className="max-h-[100vh] overflow-auto rounded-xl border border-border bg-card">
-        <Table className="min-w-[900px]">
-          <TableHeader className="sticky top-0 z-10 bg-card">
-            <TableRow>
-              <TableHead className="w-16"></TableHead>
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Produits actifs</span>
+          <div className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-600">
+            <Eye className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="mt-3 text-3xl font-bold tabular-nums">{list.filter(p => p.is_active).length}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Visibles dans la boutique</p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Stock faible</span>
+          <div className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600">
+            <Package className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="mt-3 text-3xl font-bold tabular-nums">
+          {list.filter(p => p.stock > 0 && p.stock <= 5).length}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Produits à réapprovisionner</p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Ruptures de stock</span>
+          <div className="rounded-xl bg-destructive/10 p-2.5 text-destructive">
+            <Package className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="mt-3 text-3xl font-bold tabular-nums">
+          {list.filter(p => p.stock === 0).length}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Produits indisponibles</p>
+      </div>
+
+    </div>
+
+    {/* FILTERS */}
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+        <div>
+          <h2 className="font-semibold">Catalogue des produits</h2>
+          <p className="text-xs text-muted-foreground">
+            Recherchez et gérez vos produits.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-2 rounded-lg"
+          onClick={refresh}
+          disabled={loading}
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          Actualiser
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-3 lg:flex-row">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher par nom, marque ou SKU..."
+            className="h-11 rounded-xl pl-10"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
+          <SelectTrigger className="h-11 w-full rounded-xl lg:w-48">
+            <SelectValue placeholder="Filtrer le stock" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les stocks</SelectItem>
+            <SelectItem value="in">En stock (&gt; 5)</SelectItem>
+            <SelectItem value="low">Stock faible (1-5)</SelectItem>
+            <SelectItem value="out">Rupture de stock</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as any)}>
+          <SelectTrigger className="h-11 w-full rounded-xl lg:w-52">
+            <SelectValue placeholder="Catégorie" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">Toutes les catégories</SelectItem>
+            {Object.entries(categoriesMap).map(([id, name]) => (
+              <SelectItem key={id} value={id}>{name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {filtered.length} résultat(s) trouvé(s)
+        </p>
+        {(search || stockFilter !== "all" || categoryFilter !== "all") && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setStockFilter("all");
+              setCategoryFilter("all");
+            }}
+            className="text-xs font-medium text-accent-strong hover:underline"
+          >
+            Réinitialiser les filtres
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* PRODUCT TABLE */}
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div>
+          <h3 className="font-semibold">Liste des produits</h3>
+          <p className="text-xs text-muted-foreground">
+            Gestion et suivi du catalogue
+          </p>
+        </div>
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
+          {filtered.length} produits
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <Table className="min-w-[1050px]">
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-20 pl-5">Image</TableHead>
               <TableHead>Produit</TableHead>
+
               <TableHead>
-                <button type="button" className="flex items-center gap-2" onClick={togglePriceSort}>
-                  <span>Prix</span>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 font-semibold"
+                  onClick={togglePriceSort}
+                >
+                  Prix
                   <SortArrow dir={priceSort} ariaLabel="Trier par prix" />
                 </button>
               </TableHead>
+
               <TableHead>
-                <button type="button" className="flex items-center gap-2" onClick={toggleStockSort}>
-                  <span>Stock</span>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 font-semibold"
+                  onClick={toggleStockSort}
+                >
+                  Stock
                   <SortArrow dir={stockSort} ariaLabel="Trier par stock" />
                 </button>
               </TableHead>
-              <TableHead>Variantes</TableHead>
-              <TableHead>Nouveau</TableHead>
-              <TableHead>Actif</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+
+              <TableHead className="text-center">Variantes</TableHead>
+              <TableHead className="text-center">Nouveau</TableHead>
+              <TableHead className="text-center">Statut</TableHead>
+              <TableHead className="pr-5 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-16 text-center text-muted-foreground">
-                  <div className="flex items-center justify-center">
+                <TableCell colSpan={8} className="h-64">
+                  <div className="flex justify-center">
                     <Spinner showLabel />
                   </div>
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-16 text-center">
-                  <Package className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-2 text-muted-foreground">Aucun produit trouvé.</p>
+                <TableCell colSpan={8} className="h-64">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="mb-3 rounded-2xl bg-muted p-4">
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="font-semibold">Aucun produit trouvé</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Modifiez votre recherche ou vos filtres.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => {
+                        setSearch("");
+                        setStockFilter("all");
+                        setCategoryFilter("all");
+                      }}
+                    >
+                      Réinitialiser
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedProducts.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <Avatar className="h-10 w-10 rounded-md">
-                      {mainImage(p.images)?.url ? (
-                        <AvatarImage src={mainImage(p.images)!.url} alt={p.name} className="h-full w-full rounded-md object-cover" />
-                      ) : (
-                        <AvatarFallback className="rounded-md">{p.name.slice(0, 1)}</AvatarFallback>
-                      )}
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.sku}</p>
-                  </TableCell>
-                 
-                 
+              paginatedProducts.map((p) => {
+                const image = mainImage(p.images);
 
-                 <TableCell className="font-semibold">
-                    {p.variants.length > 0 ? (() => {
-                      const { min, max } = priceRangeForProduct(p);
-                      return min === max ? (
-                        <span>{formatPrice(min)}</span>
-                      ) : (
-                        <span className="text-sm">
-                          {formatPrice(min)} – {formatPrice(max)}
-                        </span>
-                      );
-                    })() : (
-                      formatPrice(p.price)
-                    )}
-                  </TableCell>
-                  <TableCell className={p.stock === 0 ? "font-semibold text-destructive" : ""}>{p.stock}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.variants.length}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={!!p.is_new}
-                      disabled={togglingNewId === p.id}
-                      onCheckedChange={(next) => toggleIsNew(p.id, next)}
-                      aria-label={p.is_new ? "Retirer le badge Nouveau" : "Afficher le badge Nouveau"}
-                      className="data-[state=checked]:bg-accent-strong"
-                    />
-                  </TableCell>
-                  <TableCell>
+                return (
+                  <TableRow
+                    key={p.id}
+                    className="group transition-colors hover:bg-muted/30"
+                  >
+                    <TableCell className="pl-5">
+                      <Avatar className="h-12 w-12 rounded-xl border border-border shadow-sm">
+                        {image?.url ? (
+                          <AvatarImage
+                            src={image.url}
+                            alt={p.name}
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="rounded-xl bg-muted">
+                          <Package className="h-5 w-5 text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="max-w-[280px]">
+                        <p className="truncate font-semibold">{p.name}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {p.sku || "Sans SKU"}
+                          </span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {categoriesMap[p.category_id ?? ""] || "Sans catégorie"}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="font-semibold tabular-nums">
+                        {p.variants.length > 0 ? (() => {
+                          const { min, max } = priceRangeForProduct(p);
+                          return min === max
+                            ? formatPrice(min)
+                            : (
+                              <span className="text-sm">
+                                {formatPrice(min)} – {formatPrice(max)}
+                              </span>
+                            );
+                        })() : formatPrice(p.price)}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className={cn(
+                        "inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold",
+                        p.stock === 0
+                          ? "bg-destructive/10 text-destructive"
+                          : p.stock <= 5
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-emerald-500/10 text-emerald-600"
+                      )}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {p.stock === 0 ? "Rupture" : `${p.stock} unités`}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <span className="inline-flex min-w-8 items-center justify-center rounded-lg bg-muted px-2.5 py-1.5 text-xs font-semibold">
+                        {p.variants.length}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div className="flex justify-center">
+                        <Switch
+                          checked={!!p.is_new}
+                          disabled={togglingNewId === p.id}
+                          onCheckedChange={(next) => toggleIsNew(p.id, next)}
+                          aria-label={p.is_new ? "Retirer le badge Nouveau" : "Afficher le badge Nouveau"}
+                          className="data-[state=checked]:bg-accent-strong"
+                        />
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div className="flex justify-center">
                         <Switch
                           checked={!!p.is_active}
-                          onCheckedChange={() => setToggleConfirm({ id: p.id, next: !p.is_active })}
-                          className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-destructive"
+                          onCheckedChange={() => setToggleConfirm({
+                            id: p.id,
+                            next: !p.is_active
+                          })}
+                          className="data-[state=checked]:bg-emerald-600"
+                          aria-label={p.is_active ? "Désactiver" : "Activer"}
                         />
-                  </TableCell>
-                  <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="pr-5">
+                      <div className="flex items-center justify-end gap-1.5">
 
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
-                          onClick={() => { setViewProduct(p); setSelectedOptions({}); setSelectedImageId(null); }}
-                          aria-label="Voir"
+                          className="h-9 w-9 rounded-lg"
+                          onClick={() => {
+                            setViewProduct(p);
+                            setSelectedOptions({});
+                            setSelectedImageId(null);
+                          }}
+                          aria-label="Voir le produit"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setDraft(p); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }}>
+
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-9 w-9 rounded-lg"
+                          onClick={() => {
+                            setDraft(p);
+                            setRemovedAttributeIds([]);
+                            setShowRequiredErrors(false);
+                            setOpen(true);
+                          }}
+                          aria-label="Modifier le produit"
+                        >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirmDeleteId(p.id)}>
+
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setConfirmDeleteId(p.id)}
+                          aria-label="Supprimer le produit"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
+
                       </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
+      {/* PAGINATION */}
       {filtered.length > 0 && (
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm text-foreground">
-            {pageStart}–{pageEnd} sur {filtered.length}
-          </span>
-          <Pagination className="mx-0 w-auto justify-end text-foreground">
+        <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Affichage{" "}
+            <span className="font-semibold text-foreground">{pageStart}–{pageEnd}</span>
+            {" "}sur{" "}
+            <span className="font-semibold text-foreground">{filtered.length}</span>
+            {" "}produits
+          </p>
+
+          <Pagination className="mx-0 w-auto justify-end">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
                   onClick={(event) => {
                     event.preventDefault();
-                    setCurrentPage((page) => Math.max(1, page - 1));
+                    setCurrentPage(page => Math.max(1, page - 1));
                   }}
                   aria-disabled={currentPage === 1}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : undefined}
+                  className={cn(
+                    "rounded-lg",
+                    currentPage === 1 && "pointer-events-none opacity-40"
+                  )}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(page => (
                 <PaginationItem key={page}>
                   <PaginationLink
                     href="#"
@@ -963,28 +1236,38 @@ function AdminProducts() {
                       event.preventDefault();
                       setCurrentPage(page);
                     }}
+                    className="rounded-lg"
                   >
                     {page}
                   </PaginationLink>
                 </PaginationItem>
               ))}
+
               <PaginationItem>
                 <PaginationNext
                   href="#"
                   onClick={(event) => {
                     event.preventDefault();
-                    setCurrentPage((page) => Math.min(totalPages, page + 1));
+                    setCurrentPage(page => Math.min(totalPages, page + 1));
                   }}
                   aria-disabled={currentPage === totalPages}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : undefined}
+                  className={cn(
+                    "rounded-lg",
+                    currentPage === totalPages && "pointer-events-none opacity-40"
+                  )}
                 />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </div>
       )}
+    </div>
 
-    {/* View product dialog */}
+    {/* Les trois Dialog existants : détails, confirmation activation,
+        confirmation suppression, ainsi que le Dialog d'édition.
+        Conserve ici leur contenu actuel. */}
+
+    {/* VIEW PRODUCT DIALOG */}
     <Dialog
       open={Boolean(viewProduct)}
       onOpenChange={(v) => {
@@ -995,371 +1278,414 @@ function AdminProducts() {
         }
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{viewProduct ? viewProduct.name : ""}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto rounded-2xl border-border p-0">
+        <div className="border-b border-border bg-muted/30 px-6 py-5">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-accent/10 p-2.5 text-accent-strong">
+                <Package className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl">
+                  {viewProduct?.name || "Détails du produit"}
+                </DialogTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Aperçu détaillé du produit
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
 
-        {viewProduct && (() => {
-          const sorted = [...viewProduct.images].sort(
-            (a, b) => Number(b.is_main) - Number(a.is_main) || a.position - b.position
-          );
+        <div className="p-6">
+          {viewProduct && (() => {
+            const sorted = [...viewProduct.images].sort(
+              (a, b) => Number(b.is_main) - Number(a.is_main) || a.position - b.position
+            );
 
-          const hasVariants = viewProduct.variants.length > 0;
+            const hasVariants = viewProduct.variants.length > 0;
 
-          const defaultSelectedOptions = hasVariants
-            ? viewProduct.attributes.reduce<Record<string, string>>((acc, attr) => {
-                const firstVariantValue = viewProduct.variants[0]?.options?.[attr.id];
-                if (firstVariantValue) acc[attr.id] = firstVariantValue;
-                return acc;
-              }, {})
-            : {};
+            const defaultSelectedOptions = hasVariants
+              ? viewProduct.attributes.reduce<Record<string, string>>((acc, attr) => {
+                  const value = viewProduct.variants[0]?.options?.[attr.id];
+                  if (value) acc[attr.id] = value;
+                  return acc;
+                }, {})
+              : {};
 
-          const effectiveSelectedOptions = Object.keys(selectedOptions).length > 0 ? selectedOptions : defaultSelectedOptions;
+            const effectiveSelectedOptions =
+              Object.keys(selectedOptions).length > 0
+                ? selectedOptions
+                : defaultSelectedOptions;
 
-          // La sélection n'est "complète" que si une valeur est choisie pour CHAQUE attribut
-          const isSelectionComplete =
-            viewProduct.attributes.length > 0 &&
-            viewProduct.attributes.every((attr) => Boolean(effectiveSelectedOptions[attr.id]));
+            const isSelectionComplete =
+              viewProduct.attributes.length > 0 &&
+              viewProduct.attributes.every(attr => Boolean(effectiveSelectedOptions[attr.id]));
 
-          // Variante correspondant exactement à la combinaison choisie (comme côté boutique)
-          const selectedVariant = isSelectionComplete
-            ? viewProduct.variants.find((v) =>
-                viewProduct.attributes.every((attr) => v.options[attr.id] === effectiveSelectedOptions[attr.id])
-              ) ?? null
-            : null;
+            const selectedVariant = isSelectionComplete
+              ? viewProduct.variants.find(v =>
+                  viewProduct.attributes.every(
+                    attr => v.options[attr.id] === effectiveSelectedOptions[attr.id]
+                  )
+                ) ?? null
+              : null;
 
-          // Image liée à la combinaison choisie. product_images.variant_value stocke l'ID
-          // de la valeur d'attribut (attribute_values.id) — donc on compare aux VALEURS
-          // sélectionnées (ids), pas aux labels. C'est ce qui empêchait l'image de
-          // s'afficher : avant on comparait à des labels ("Rouge") alors que la colonne
-          // contient des ids.
-          const chosenValueIds = Object.values(effectiveSelectedOptions);
-          const variantImage = chosenValueIds.length
-            ? sorted.find((img) => img.variant_value && chosenValueIds.includes(img.variant_value))
-            : null;
+            const chosenValueIds = Object.values(effectiveSelectedOptions);
 
-          const activeImage = selectedImageId
-            ? sorted.find((img) => img.id === selectedImageId) ?? variantImage ?? sorted[0]
-            : variantImage ?? sorted[0];
+            const variantImage = chosenValueIds.length
+              ? sorted.find(img => img.variant_value && chosenValueIds.includes(img.variant_value))
+              : null;
 
-          const resolveAttributeImage = (valueId: string) => {
-            const value = viewProduct.attributes
-              .flatMap((attr) => attr.values)
-              .find((item) => item.id === valueId);
-            if (value?.image_url && looksLikeImageValue(value.image_url)) return value.image_url;
-            if (value?.label && looksLikeImageValue(value.label)) return value.label;
-            return viewProduct.images.find((img) => img.variant_value === valueId)?.url;
-          };
+            const activeImage = selectedImageId
+              ? sorted.find(img => img.id === selectedImageId) ?? variantImage ?? sorted[0]
+              : variantImage ?? sorted[0];
 
-          const displayPrice = selectedVariant ? selectedVariant.price : viewProduct.price;
-          const displayComparePrice = selectedVariant ? selectedVariant.compare_at_price : viewProduct.compare_at_price;
-          const displayStock = selectedVariant ? selectedVariant.stock : viewProduct.stock;
-          const variantPrices = viewProduct.variants.map((variant) => variant.price);
-          const variantPromoPrices = viewProduct.variants.map((variant) => variant.cost_price ?? variant.price);
-          const hasOneGlobalPrice =
-            !hasVariants ||
-            (variantPrices.every((price) => price === variantPrices[0]) &&
-              variantPromoPrices.every((price) => price === variantPromoPrices[0]));
-          const globalOriginalPrice = hasVariants ? viewProduct.variants[0]?.price ?? viewProduct.price : viewProduct.price;
-          const globalPromoPrice = hasVariants
-            ? viewProduct.variants[0]?.cost_price ?? globalOriginalPrice
-            : viewProduct.cost_price ?? viewProduct.price;
-          const globalDiscountPercent = globalOriginalPrice && globalPromoPrice !== globalOriginalPrice
-            ? Math.round(((globalOriginalPrice - globalPromoPrice) / globalOriginalPrice) * 100)
-            : null;
+            const resolveAttributeImage = (valueId: string) => {
+              const value = viewProduct.attributes
+                .flatMap(attr => attr.values)
+                .find(item => item.id === valueId);
 
-          const chooseOption = (attributeId: string, valueId: string) => {
-            setSelectedOptions((prev) => ({ ...prev, [attributeId]: valueId }));
-            // laisse l'image suivre automatiquement la nouvelle combinaison
-            setSelectedImageId(null);
-          };
+              if (value?.image_url && looksLikeImageValue(value.image_url)) return value.image_url;
+              if (value?.label && looksLikeImageValue(value.label)) return value.label;
 
-          return (
-            <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="space-y-3">
-               
+              return viewProduct.images.find(img => img.variant_value === valueId)?.url;
+            };
 
-                <div className="flex min-h-[320px] items-center justify-center overflow-hidden rounded-xl border border-blue-500 bg-surface">
-                  {activeImage?.url ? (
-                    <img src={activeImage.url} alt={viewProduct.name} className="h-full max-h-[320px] w-full object-contain" />
-                  ) : (
-                    <div className="flex h-[320px] w-full items-center justify-center text-muted-foreground">
-                      Aucune image
+            const displayPrice = selectedVariant ? selectedVariant.price : viewProduct.price;
+            const displayStock = selectedVariant ? selectedVariant.stock : viewProduct.stock;
+
+            const variantPrices = viewProduct.variants.map(v => v.price);
+            const variantPromoPrices = viewProduct.variants.map(v => v.cost_price ?? v.price);
+
+            const hasOneGlobalPrice =
+              !hasVariants ||
+              (variantPrices.every(price => price === variantPrices[0]) &&
+                variantPromoPrices.every(price => price === variantPromoPrices[0]));
+
+            const globalOriginalPrice = hasVariants
+              ? viewProduct.variants[0]?.price ?? viewProduct.price
+              : viewProduct.price;
+
+            const globalPromoPrice = hasVariants
+              ? viewProduct.variants[0]?.cost_price ?? globalOriginalPrice
+              : viewProduct.cost_price ?? viewProduct.price;
+
+            const globalDiscountPercent =
+              globalOriginalPrice && globalPromoPrice !== globalOriginalPrice
+                ? Math.round(((globalOriginalPrice - globalPromoPrice) / globalOriginalPrice) * 100)
+                : null;
+
+            const chooseOption = (attributeId: string, valueId: string) => {
+              setSelectedOptions(prev => ({ ...prev, [attributeId]: valueId }));
+              setSelectedImageId(null);
+            };
+
+            return (
+              <div className="grid gap-7 lg:grid-cols-2">
+
+                {/* GALLERY */}
+                <div className="space-y-3">
+                  <div className="flex min-h-[320px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/30 p-4">
+                    {activeImage?.url ? (
+                      <img
+                        src={activeImage.url}
+                        alt={viewProduct.name}
+                        className="max-h-[380px] w-full object-contain"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                        <Package className="h-12 w-12 opacity-40" />
+                        <span className="text-sm">Aucune image disponible</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {sorted.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {sorted.map(img => (
+                        <button
+                          key={img.id}
+                          type="button"
+                          onClick={() => setSelectedImageId(img.id)}
+                          className={cn(
+                            "h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-muted transition",
+                            activeImage?.id === img.id
+                              ? "border-accent-strong"
+                              : "border-transparent hover:border-border"
+                          )}
+                        >
+                          <img src={img.url} alt={viewProduct.name} className="h-full w-full object-cover" />
+                        </button>
+                      ))}
                     </div>
                   )}
+
+                  {/* GENERAL INFORMATION */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-border p-3">
+                      <p className="text-xs text-muted-foreground">Marque</p>
+                      <p className="mt-1 truncate text-sm font-semibold">
+                        {viewProduct.brand || "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border p-3">
+                      <p className="text-xs text-muted-foreground">SKU</p>
+                      <p className="mt-1 truncate text-sm font-semibold">
+                        {viewProduct.sku || "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border p-3">
+                      <p className="text-xs text-muted-foreground">Catégorie</p>
+                      <p className="mt-1 truncate text-sm font-semibold">
+                        {categoriesMap[viewProduct.category_id ?? ""] ?? "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border p-3">
+                      <p className="text-xs text-muted-foreground">Statut</p>
+                      <span className={cn(
+                        "mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold",
+                        viewProduct.is_active
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {viewProduct.is_active ? "Actif" : "Inactif"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {sorted.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {sorted.map((img) => (
-                      <button
-                        key={img.id}
-                        type="button"
-                        onClick={() => setSelectedImageId(img.id)}
-                        className={cn(
-                          "shrink-0 overflow-hidden rounded-md border-2 transition-colors",
-                          activeImage?.id === img.id
-                            ? "border-blue-500"
-                            : "border-transparent hover:border-border",
-                        )}
-                      >
-                        <Avatar className="h-14 w-14 rounded-none">
-                          <AvatarImage src={img.url} alt={viewProduct.name} className="object-cover" />
-                        </Avatar>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* PRODUCT DETAILS */}
+                <div className="space-y-5">
 
-             
-              </div>
+                  <div className="rounded-2xl border border-border bg-card p-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {hasVariants && hasOneGlobalPrice ? "Prix global" : "Prix du produit"}
+                    </p>
 
-              <div className="space-y-4 pt-1">
-                <div className="space-y-3 text-sm">
-                  <div className="text-muted-foreground">
-                    <span className="font-bold text-foreground">Marque :</span> {viewProduct.brand || "—"}
-                  </div>
-               
-                  <div className="text-muted-foreground">
-                    <span className="font-bold text-foreground">SKU :</span> {viewProduct.sku || "—"}
-                  </div>
-                  {hasVariants && hasOneGlobalPrice && (
-                    <div className="my-3 pt-1">
-                      <div className="font-bold text-foreground">Prix global :</div>
-                      <div className="mt-3 flex items-baseline gap-2 font-semibold">
-                        <span className="text-xl">{formatPrice(globalPromoPrice)}</span>
-                        {globalDiscountPercent !== null && (
-                          <span className="text-md text-muted-foreground line-through">{formatPrice(globalOriginalPrice)}</span>
+                    <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                      <span className="text-2xl font-bold">
+                        {formatPrice(
+                          hasVariants && hasOneGlobalPrice
+                            ? globalPromoPrice
+                            : viewProduct.cost_price ?? viewProduct.price
                         )}
-                        {globalDiscountPercent !== null && (
-                          <span className="text-md font-bold text-destructive">
+                      </span>
+
+                      {globalDiscountPercent !== null && hasVariants && hasOneGlobalPrice && (
+                        <>
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatPrice(globalOriginalPrice)}
+                          </span>
+                          <span className="rounded-md bg-destructive/10 px-2 py-1 text-xs font-bold text-destructive">
                             -{Math.abs(globalDiscountPercent)}%
                           </span>
-                        )}
-                      </div>
-                      <div className={viewProduct.stock === 0 ? "mt-3 font-semibold text-destructive" : "mt-3 text-muted-foreground"}>
-                        <span className="font-bold text-foreground">Stock global :</span> {viewProduct.stock}
-                      </div>
-                    </div>
-                  )}
-                     <div className="text-muted-foreground">
-                    <span className="font-bold text-foreground">Catégorie :</span> {categoriesMap[viewProduct.category_id ?? ""] ?? "—"}
-                  </div>
-                  <div className="text-muted-foreground">
-                    <span className="font-bold text-foreground">Statut :</span> {viewProduct.is_active ? "Actif" : "Inactif"}
-                  </div>
-                </div>
-
-                {hasVariants ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold">Variantes :</h4>
-
+                        </>
+                      )}
                     </div>
 
-                    <div className="space-y-2">
-                      {viewProduct.attributes.map((attribute) => {
-                        const selectedValueId = effectiveSelectedOptions[attribute.id];
-                        const selectedValueLabel = attribute.values.find((v) => v.id === selectedValueId)?.label;
+                    <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
+                      <span className="text-muted-foreground">Stock disponible</span>
+                      <span className={cn(
+                        "font-semibold",
+                        (selectedVariant ? selectedVariant.stock : viewProduct.stock) === 0
+                          ? "text-destructive"
+                          : "text-emerald-600"
+                      )}>
+                        {selectedVariant ? selectedVariant.stock : viewProduct.stock} unités
+                      </span>
+                    </div>
+                  </div>
 
-                        return (
-                          <div key={attribute.id} className="space-y-2">
-                            <p className="text-sm font-medium">
-                              {attribute.name}
-                          
+                  {/* VARIANTS */}
+                  {hasVariants && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Variantes du produit</h3>
+                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                          {viewProduct.variants.length} variantes
+                        </span>
+                      </div>
+
+                      {viewProduct.attributes.map(attribute => (
+                        <div key={attribute.id} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold">{attribute.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {attribute.values.find(v => v.id === effectiveSelectedOptions[attribute.id])?.label}
                             </p>
-                            <div className="flex flex-wrap gap-2">
-                              {attribute.values.map((value) => {
-                                const isSelected = effectiveSelectedOptions[attribute.id] === value.id;
+                          </div>
 
-                                if (attribute.type === "swatch") {
-                                  return (
-                                    <button
-                                      key={value.id}
-                                      type="button"
-                                      title={value.label}
-                                      onClick={() => chooseOption(attribute.id, value.id)}
-                                      className={cn(
-                                        "h-8 w-8 rounded-full border-2 transition",
-                                        isSelected
-                                          ? "border-blue-500 ring-2 ring-blue-200"
-                                          : "border-border hover:border-muted-foreground",
-                                      )}
-                                      style={{ backgroundColor: value.hex || "#e5e7eb" }}
-                                    />
-                                  );
-                                }
+                          <div className="flex flex-wrap gap-2">
+                            {attribute.values.map(value => {
+                              const isSelected = effectiveSelectedOptions[attribute.id] === value.id;
 
-                                if (attribute.type === "image" || looksLikeImageValue(value.label) || looksLikeImageValue(value.image_url)) {
-                                  const previewUrl = resolveAttributeImage(value.id);
-                                  return (
-                                    <button
-                                      key={value.id}
-                                      type="button"
-                                      title={value.label}
-                                      onClick={() => chooseOption(attribute.id, value.id)}
-                                      className={cn(
-                                        "grid h-9 w-9 place-items-center overflow-hidden rounded-full border-2 transition",
-                                        isSelected
-                                          ? "border-blue-500 ring-2 ring-blue-200"
-                                          : "border-border hover:border-muted-foreground",
-                                      )}
-                                    >
-                                      {previewUrl ? (
-                                        <img
-                                          src={previewUrl}
-                                          alt={value.label}
-                                          className="h-full w-full rounded-full object-cover"
-                                        />
-                                      ) : (
-                                        <span className="grid h-full w-full place-items-center rounded-full border border-dashed border-border bg-muted text-[7px] text-muted-foreground">
-                                          IMG
-                                        </span>
-                                      )}
-                                    </button>
-                                  );
-                                }
+                              if (attribute.type === "swatch") {
+                                return (
+                                  <button
+                                    key={value.id}
+                                    type="button"
+                                    title={value.label}
+                                    onClick={() => chooseOption(attribute.id, value.id)}
+                                    className={cn(
+                                      "h-9 w-9 rounded-full border-2 transition",
+                                      isSelected
+                                        ? "border-accent-strong ring-2 ring-accent/30"
+                                        : "border-border hover:scale-105"
+                                    )}
+                                    style={{ backgroundColor: value.hex || "#e5e7eb" }}
+                                  />
+                                );
+                              }
+
+                              if (
+                                attribute.type === "image" ||
+                                looksLikeImageValue(value.label) ||
+                                looksLikeImageValue(value.image_url)
+                              ) {
+                                const previewUrl = resolveAttributeImage(value.id);
 
                                 return (
                                   <button
                                     key={value.id}
                                     type="button"
+                                    title={value.label}
                                     onClick={() => chooseOption(attribute.id, value.id)}
                                     className={cn(
-                                      "rounded-full border px-3 py-1.5 text-xs transition",
-                                      isSelected
-                                        ? "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/20"
-                                        : "border-border hover:bg-surface",
+                                      "h-10 w-10 overflow-hidden rounded-xl border-2 transition",
+                                      isSelected ? "border-accent-strong ring-2 ring-accent/20" : "border-border"
                                     )}
                                   >
-                                    {value.label}
+                                    {previewUrl && (
+                                      <img src={previewUrl} alt={value.label} className="h-full w-full object-cover" />
+                                    )}
                                   </button>
                                 );
-                              })}
-                            </div>
+                              }
+
+                              return (
+                                <button
+                                  key={value.id}
+                                  type="button"
+                                  onClick={() => chooseOption(attribute.id, value.id)}
+                                  className={cn(
+                                    "rounded-lg border px-3 py-2 text-sm font-medium transition",
+                                    isSelected
+                                      ? "border-accent-strong bg-accent/10 text-accent-strong"
+                                      : "border-border hover:bg-muted"
+                                  )}
+                                >
+                                  {value.label}
+                                </button>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
+
+                      {selectedVariant ? (
+                        <div className="space-y-3 rounded-xl border border-accent/20 bg-accent/5 p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-sm font-semibold">Variante sélectionnée</span>
+                            <span className="text-xs text-muted-foreground">{selectedVariant.sku || "Sans SKU"}</span>
+                          </div>
+
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            <span className="text-xl font-bold">
+                              {formatPrice(selectedVariant.cost_price ?? selectedVariant.price)}
+                            </span>
+                            {selectedVariant.cost_price != null &&
+                              selectedVariant.cost_price !== selectedVariant.price && (
+                                <span className="text-sm text-muted-foreground line-through">
+                                  {formatPrice(selectedVariant.price)}
+                                </span>
+                              )}
+                          </div>
+
+                          <p className="text-sm text-muted-foreground">
+                            Stock : <strong className="text-foreground">{selectedVariant.stock}</strong>
+                          </p>
+                        </div>
+                      ) : isSelectionComplete ? (
+                        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                          Cette combinaison n'existe pas pour ce produit.
+                        </div>
+                      ) : null}
                     </div>
-
-                    {selectedVariant ? (
-                      <div className="space-y-2 rounded-lg border border-border bg-accent/5 p-3 text-sm">
-                        <div className="font-semibold">
-                          {Object.entries(selectedVariant.options || {}).map(([attrId, valId], index) => {
-                            const attr = viewProduct.attributes.find((a) => a.id === attrId);
-                            const val = attr?.values.find((x) => x.id === valId);
-                            if (!attr || !val) return null;
-                            return (
-                              <span key={attrId}>
-                                {index > 0 && " / "}
-                                {attr.name}: <span className="text-muted-foreground">{val.label}</span>
-                              </span>
-                            );
-                          })}
-                        </div>
-                        <div className="text-muted-foreground">
-                          <span className="font-semibold text-foreground">SKU : </span>
-                          {selectedVariant.sku || "—"}
-                        </div>
-                        <div className="mt-5 flex items-baseline gap-2 font-semibold">
-                          <span className="text-lg">{formatPrice(selectedVariant.cost_price ?? selectedVariant.price)}</span>
-                          {selectedVariant.cost_price != null && selectedVariant.cost_price !== selectedVariant.price && (
-                            <>
-                              <span className="text-md text-muted-foreground line-through">{formatPrice(selectedVariant.price)}</span>
-                              <span className="text-md font-bold text-destructive">
-                                -{Math.round(((selectedVariant.price - selectedVariant.cost_price) / selectedVariant.price) * 100)}%
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className={selectedVariant.stock === 0 ? "font-semibold text-destructive" : ""}>
-                          <div className="font-semibold">Stock :  <span className="text-muted-foreground">{selectedVariant.stock}</span></div>
-                        </div>
-                      </div>
-                    ) : isSelectionComplete ? (
-                      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-                        Cette combinaison n'existe pas pour ce produit.
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="space-y-2 rounded-lg border border-border bg-accent/5 p-3 text-sm">
-                    <div><span className="text-muted-foreground">Prix global : </span><span className="font-semibold">{formatPrice(displayPrice)}</span></div>
-                    {globalDiscountPercent !== null && (
-                      <div>
-                        <span className="text-muted-foreground">Après promotion : </span>
-                        <span className="font-semibold text-accent-strong">{formatPrice(globalPromoPrice)}</span>
-                        <span className="ml-2 rounded bg-accent-strong/10 px-2 py-0.5 text-xs font-bold text-accent-strong">
-                          {globalDiscountPercent > 0 ? `-${globalDiscountPercent}%` : `+${Math.abs(globalDiscountPercent)}%`}
-                        </span>
-                      </div>
-                    )}
-                    {displayComparePrice && (
-                      <div>
-                        <span className="text-muted-foreground">Avant : </span>
-                        <span className="text-muted-foreground line-through">{formatPrice(displayComparePrice)}</span>
-                      </div>
-                    )}
-                    <div className={displayStock === 0 ? "font-semibold text-destructive" : ""}>
-                      <span className="text-muted-foreground">Stock : </span>{displayStock}
-                    </div>
-                  </div>
-                )}
-
-                {viewProduct.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {viewProduct.tags.map((t) => (
-                      <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs">{t}</span>
-                    ))}
-                  </div>
-                )}
-
-                
-              </div>
-
-              {(viewProduct.short_description || viewProduct.description) && (
-                <div className="space-y-4 text-sm lg:col-span-2">
-                  <h4 className="font-bold text-foreground">Description</h4>
-                  {viewProduct.short_description && (
-                    <p className="text-muted-foreground">{viewProduct.short_description}</p>
                   )}
-                  {viewProduct.description && <RichText value={viewProduct.description} className="text-foreground" />}
-                </div>
-              )}
 
-              <div className="flex justify-end gap-2 pt-2 lg:col-span-2">
-                <Button variant="outline" onClick={() => setViewProduct(null)}>Fermer</Button>
-                <Button
-                  variant="accent"
-                  onClick={() => { setDraft(viewProduct); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); setViewProduct(null); setSelectedOptions({}); }}
-                >
-                  Éditer
-                </Button>
+                  {!hasVariants && viewProduct.compare_at_price && (
+                    <p className="text-sm text-muted-foreground">
+                      Prix avant réduction :{" "}
+                      <span className="line-through">
+                        {formatPrice(viewProduct.compare_at_price)}
+                      </span>
+                    </p>
+                  )}
+
+                  {(viewProduct.short_description || viewProduct.description) && (
+                    <div className="space-y-3 border-t border-border pt-4">
+                      <h3 className="font-semibold">Description</h3>
+                      {viewProduct.short_description && (
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {viewProduct.short_description}
+                        </p>
+                      )}
+                      {viewProduct.description && (
+                        <RichText value={viewProduct.description} className="text-sm leading-relaxed" />
+                      )}
+                    </div>
+                  )}
+
+                </div>
+
+                {/* FOOTER */}
+                <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end lg:col-span-2">
+                  <Button variant="outline" onClick={() => setViewProduct(null)}>
+                    Fermer
+                  </Button>
+                  <Button
+                    variant="accent"
+                    onClick={() => {
+                      setDraft(viewProduct);
+                      setRemovedAttributeIds([]);
+                      setShowRequiredErrors(false);
+                      setOpen(true);
+                      setViewProduct(null);
+                      setSelectedOptions({});
+                    }}
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Modifier le produit
+                  </Button>
+                </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </div>
       </DialogContent>
     </Dialog>
 
-    {/* Confirm toggle dialog (activer / désactiver) */}
-    <Dialog open={Boolean(toggleConfirm)} onOpenChange={(v) => { if (!v) setToggleConfirm(null); }}>
-      <DialogContent>
+    {/* CONFIRM TOGGLE */}
+    <Dialog open={Boolean(toggleConfirm)} onOpenChange={v => { if (!v) setToggleConfirm(null); }}>
+      <DialogContent className="max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Confirmer</DialogTitle>
+          <DialogTitle>Confirmer le changement de statut</DialogTitle>
         </DialogHeader>
-        <p>Voulez-vous vraiment {toggleConfirm?.next ? "activer" : "désactiver"} ce produit ?</p>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setToggleConfirm(null)} disabled={isToggling}>Annuler</Button>
+        <p className="text-sm text-muted-foreground">
+          Voulez-vous vraiment {toggleConfirm?.next ? "activer" : "désactiver"} ce produit ?
+        </p>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setToggleConfirm(null)} disabled={isToggling}>
+            Annuler
+          </Button>
           <Button
             variant="accent"
             onClick={async () => {
               if (!toggleConfirm) return;
               setIsToggling(true);
               const { id, next } = toggleConfirm;
-              // optimistic
-              setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_active: next } : x)));
+              setList(prev => prev.map(x => x.id === id ? { ...x, is_active: next } : x));
+
               try {
                 const { error } = await supabase.from("products").update({ is_active: next }).eq("id", id);
                 if (error) throw error;
@@ -1367,149 +1693,191 @@ function AdminProducts() {
                 setToggleConfirm(null);
               } catch (err) {
                 console.error(err);
-                // rollback
-                setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_active: !next } : x)));
-                toast.error("Impossible de mettre à jour l'état du produit.");
+                setList(prev => prev.map(x => x.id === id ? { ...x, is_active: !next } : x));
+                toast.error("Impossible de mettre à jour le statut.");
               } finally {
                 setIsToggling(false);
               }
             }}
             disabled={isToggling}
           >
-            {isToggling ? (
-              <div className="flex items-center gap-2">
-                <Spinner className="h-4 w-4" />
-                <span>Chargement...</span>
-              </div>
-            ) : toggleConfirm?.next ? "Activer" : "Désactiver"}
+            {isToggling ? <Spinner className="h-4 w-4" /> : toggleConfirm?.next ? "Activer" : "Désactiver"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
-      {/* Confirm delete dialog */}
-      <Dialog open={Boolean(confirmDeleteId)} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer la suppression</DialogTitle>
-          </DialogHeader>
-          <p>Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible.</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={isDeleting}>Annuler</Button>
-            <Button
-              variant="accent"
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={async () => {
-                const id = confirmDeleteId;
-                if (!id || isDeleting) return;
-                setIsDeleting(true);
-                try {
-                  // fetch product images
-                  const { data: imgs, error: imgErr } = await supabase.from("product_images").select("url").eq("product_id", id);
-                  if (imgErr) throw imgErr;
-                  for (const img of (imgs ?? []) as any[]) {
-                    const url = img?.url as string | undefined;
-                    if (!url) continue;
-                    const m = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
-                    if (m) {
-                      const bucket = m[1]!;
-                      const path = decodeURIComponent(m[2]!);
-                      try {
-                        await deleteFromBucket(bucket, path);
-                      } catch (e) {
-                        console.warn("failed to delete storage object", path, e);
-                      }
+    {/* CONFIRM DELETE */}
+    <Dialog open={Boolean(confirmDeleteId)} onOpenChange={v => { if (!v) setConfirmDeleteId(null); }}>
+      <DialogContent className="max-w-md rounded-2xl">
+        <DialogHeader>
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+            <Trash2 className="h-6 w-6" />
+          </div>
+          <DialogTitle>Supprimer ce produit ?</DialogTitle>
+        </DialogHeader>
+
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Cette action est irréversible. Le produit et ses images seront supprimés.
+        </p>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={isDeleting}>
+            Annuler
+          </Button>
+          <Button
+            variant="accent"
+            className="bg-destructive text-white hover:bg-destructive/90"
+            disabled={isDeleting}
+            onClick={async () => {
+              const id = confirmDeleteId;
+              if (!id || isDeleting) return;
+              setIsDeleting(true);
+
+              try {
+                const { data: imgs, error: imgErr } = await supabase
+                  .from("product_images")
+                  .select("url")
+                  .eq("product_id", id);
+                if (imgErr) throw imgErr;
+
+                for (const img of (imgs ?? []) as any[]) {
+                  const url = img?.url as string | undefined;
+                  if (!url) continue;
+                  const m = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+                  if (m) {
+                    try {
+                      await deleteFromBucket(m[1]!, decodeURIComponent(m[2]!));
+                    } catch (e) {
+                      console.warn("failed to delete storage object", e);
                     }
                   }
-                  // delete image rows
-                  const { error: delImgsErr } = await supabase.from("product_images").delete().eq("product_id", id);
-                  if (delImgsErr) throw delImgsErr;
-                  // delete product
-                  const { error } = await supabase.from("products").delete().eq("id", id);
-                  if (error) throw error;
-                  setList((p) => p.filter((x) => x.id !== id));
-                  toast.success("Produit supprimé.");
-                } catch (err) {
-                  console.error(err);
-                  toast.error("Impossible de supprimer le produit.");
-                } finally {
-                  setIsDeleting(false);
-                  setConfirmDeleteId(null);
                 }
-              }}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <span className="inline-flex items-center gap-2">
-                  <Spinner className="h-4 w-4" />
-                  Suppression...
-                </span>
-              ) : (
-                "Supprimer"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+                const { error: delImgsErr } = await supabase.from("product_images").delete().eq("product_id", id);
+                if (delImgsErr) throw delImgsErr;
+
+                const { error } = await supabase.from("products").delete().eq("id", id);
+                if (error) throw error;
+
+                setList(prev => prev.filter(x => x.id !== id));
+                toast.success("Produit supprimé.");
+              } catch (err) {
+                console.error(err);
+                toast.error("Impossible de supprimer le produit.");
+              } finally {
+                setIsDeleting(false);
+                setConfirmDeleteId(null);
+              }
+            }}
+          >
+            {isDeleting ? <Spinner className="h-4 w-4" /> : "Supprimer définitivement"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* ADD / EDIT PRODUCT */}
+    <Dialog open={open} onOpenChange={v => { if (!isSaving) setOpen(v); }}>
+      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto rounded-2xl border-border p-0">
+        <div className="border-b border-border bg-muted/30 px-6 py-5">
           <DialogHeader>
-            <DialogTitle>{draft.id ? "Modifier le produit" : "Nouveau produit"}</DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-accent/10 p-2.5 text-accent-strong">
+                {draft.id ? <Edit2 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+              </div>
+              <div>
+                <DialogTitle className="text-xl">
+                  {draft.id ? "Modifier le produit" : "Nouveau produit"}
+                </DialogTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Gérez les informations, variantes et images de votre produit.
+                </p>
+              </div>
+            </div>
           </DialogHeader>
+        </div>
 
-         <Tabs defaultValue="general">
-          <TabsList>
-            <TabsTrigger value="general">Général</TabsTrigger>
-            <TabsTrigger value="variantes">Attributs</TabsTrigger>
-            <TabsTrigger value="images">Images</TabsTrigger>
-          </TabsList>
+        <div className="px-6 py-5">
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-muted/70 p-1">
+              <TabsTrigger value="general" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm">
+                <Package className="h-4 w-4" />
+                Général
+              </TabsTrigger>
+              <TabsTrigger value="variantes" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm">
+                <SlidersHorizontal className="h-4 w-4" />
+                Attributs
+              </TabsTrigger>
+              <TabsTrigger value="images" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm">
+                <ImagePlus className="h-4 w-4" />
+                Images
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="general">
-            <ProductGeneral
-              draft={draft}
-              setDraft={(p) => setDraft(p)}
-              categories={categoriesList}
-              showRequiredErrors={showRequiredErrors}
-            />
-          </TabsContent>
+            <TabsContent value="general" className="mt-5">
+              <ProductGeneral
+                draft={draft}
+                setDraft={setDraft}
+                categories={categoriesList}
+                showRequiredErrors={showRequiredErrors}
+              />
+            </TabsContent>
 
-          <TabsContent value="variantes">
-            <AttributesVariants
-              draft={draft}
-              setDraft={(p) => setDraft(p)}
-              addAttribute={addAttribute}
-              addValue={addValue}
-              removeValue={removeValue}
-              addVariant={addVariant}
-              updateAttribute={updateAttribute}
-              removeAttribute={removeAttribute}
-              updateVariant={updateVariant}
-              setVariantOption={setVariantOption}
-              moveVariant={moveVariant}
-            />
-          </TabsContent>
+            <TabsContent value="variantes" className="mt-5">
+              <AttributesVariants
+                draft={draft}
+                setDraft={setDraft}
+                addAttribute={addAttribute}
+                addValue={addValue}
+                removeValue={removeValue}
+                addVariant={addVariant}
+                updateAttribute={updateAttribute}
+                removeAttribute={removeAttribute}
+                updateVariant={updateVariant}
+                setVariantOption={setVariantOption}
+                moveVariant={moveVariant}
+              />
+            </TabsContent>
 
-          <TabsContent value="images">
-            <ProductImages draft={draft} setDraft={(p) => setDraft(p)} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="images" className="mt-5">
+              <ProductImages draft={draft} setDraft={setDraft} />
+            </TabsContent>
+          </Tabs>
+        </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>Annuler</Button>
-            <Button variant="accent" onClick={save} disabled={isSaving}>
-              {isSaving ? (
-                <span className="inline-flex items-center gap-2">
-                  <Spinner className="h-4 w-4" />
-                  Modification...
-                </span>
-              ) : (
-                draft.id ? "Modifier" : "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+        <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/20 px-6 py-4 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => setOpen(false)}
+            disabled={isSaving}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="accent"
+            className="rounded-xl px-6"
+            onClick={save}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Spinner className="mr-2 h-4 w-4" />
+                Enregistrement...
+              </>
+            ) : (
+              <>
+                {draft.id ? <Edit2 className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                {draft.id ? "Enregistrer les modifications" : "Créer le produit"}
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+  </div>
+);
+
 }

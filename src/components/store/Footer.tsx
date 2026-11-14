@@ -81,7 +81,16 @@ export function Footer() {
           <ul className="mt-4 space-y-2">
             <li><Link to="/" className="text-sm text-deep-foreground/70 transition-colors hover:text-ocre">Accueil</Link></li>
             <li><Link to="/promotions" className="text-sm text-deep-foreground/70 transition-colors hover:text-ocre">Promotions</Link></li>
-            <li><Link to="/inscription" className="text-sm text-deep-foreground/70 transition-colors hover:text-ocre">Suivre ma commande</Link></li>
+            {settings?.phone && (
+              <li>
+                <a
+                  href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}
+                  className="text-sm text-deep-foreground/70 transition-colors hover:text-ocre"
+                >
+                  Appelez-nous pour votre commande
+                </a>
+              </li>
+            )}
           </ul>
         </div>
 

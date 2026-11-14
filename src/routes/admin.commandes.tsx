@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Download, Eye, Plus, Trash2, Edit2, SlidersHorizontal, User, Phone, Mail, MapPin, FileText, FileDown, Divide } from "lucide-react";
 import { GOVERNORATES } from "@/data/governorates";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import SortArrow from "@/components/ui/sort-arrow";
@@ -15,6 +14,30 @@ import Spinner from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import {
+  Download,
+  Eye,
+  Plus,
+  Trash2,
+  Edit2,
+  SlidersHorizontal,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  FileText,
+  FileDown,
+  Search,
+  CalendarDays,
+  PackageCheck,
+  Clock3,
+  Truck,
+  CheckCircle2,
+  ShoppingBag,
+  Wallet,
+  RefreshCw,
+  ChevronDown,
+} from "lucide-react";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -145,11 +168,8 @@ const emptyOrderDraft = (): OrderDraft => ({
   note: "",
 });
 
-// ---------------------------------------------------------------------------
-// Mapping centralisé : utilisé au chargement initial ET en cas de rollback
-// (avant, ce bloc était dupliqué et incomplet -> email/adresse/ville/city et
-// images des articles n'étaient jamais peuplés après un rechargement de page)
-// ---------------------------------------------------------------------------
+
+
 async function fetchOrders(): Promise<Order[]> {
   const { data, error } = await supabase
     .from("orders")
@@ -234,6 +254,59 @@ function mapOrderRow(r: any): Order {
     }),
     notes: r.notes ?? null,
   };
+}
+
+const STATUS_DESIGN: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  pending: {
+    label: "En attente",
+    color: "border-amber-200 bg-amber-50 text-amber-700",
+    icon: Clock3,
+  },
+  confirmed: {
+    label: "Confirmée",
+    color: "border-blue-200 bg-blue-50 text-blue-700",
+    icon: CheckCircle2,
+  },
+  processing: {
+    label: "En préparation",
+    color: "border-violet-200 bg-violet-50 text-violet-700",
+    icon: PackageCheck,
+  },
+  shipped: {
+    label: "Expédiée",
+    color: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    icon: Truck,
+  },
+  delivered: {
+    label: "Livrée",
+    color: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    icon: CheckCircle2,
+  },
+  cancelled: {
+    label: "Annulée",
+    color: "border-red-200 bg-red-50 text-red-700",
+    icon: Trash2,
+  },
+};
+
+function OrderStatusBadge({ status }: { status: string }) {
+  const config = STATUS_DESIGN[status] ?? {
+    label: status,
+    color: "border-gray-200 bg-gray-50 text-gray-700",
+    icon: Clock3,
+  };
+
+  const Icon = config.icon;
+
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold",
+      config.color
+    )}>
+      <Icon className="h-3.5 w-3.5" />
+      {config.label}
+    </span>
+  );
 }
 
 function AdminOrders() {
@@ -468,6 +541,41 @@ function AdminOrders() {
     const matchStatus = filter === "all" || o.status === filter;
     return matchSearch && matchDate && matchStatus;
   });
+
+  // ===================== STATISTIQUES COMMANDES =====================
+
+const orderStats = useMemo(() => {
+  const total = list.length;
+
+  const pending = list.filter(
+    (order) => order.status === "pending"
+  ).length;
+
+  const processing = list.filter(
+    (order) => order.status === "processing"
+  ).length;
+
+  const delivered = list.filter(
+    (order) => order.status === "delivered"
+  ).length;
+
+  const cancelled = list.filter(
+    (order) => order.status === "cancelled"
+  ).length;
+
+  const revenue = list
+    .filter((order) => order.status !== "cancelled")
+    .reduce((sum, order) => sum + Number(order.total || 0), 0);
+
+  return {
+    total,
+    pending,
+    processing,
+    delivered,
+    cancelled,
+    revenue,
+  };
+}, [list]);
 
   // Apply the selected sort to the filtered orders.
   const sorted = (() => {
@@ -1181,75 +1289,390 @@ function AdminOrders() {
   const escapeHtml = (s: any) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
+  <div className="space-y-6">
+
+    {/* ===================== HEADER ===================== */}
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <FileText className="h-6 w-6" />
+        </div>
+
         <div>
-          <h1 className="text-2xl font-bold">Commandes</h1>
-          <p className="text-sm text-muted-foreground">
-            {list.length} commande{list.length > 1 ? "s" : ""} au total.
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Gestion des commandes
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Consultez, gérez et suivez toutes les commandes de votre boutique.
+          </p>
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
+            {list.length} commande{list.length > 1 ? "s" : ""} au total
           </p>
         </div>
+      </div>
 
-        <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2">
-              <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Réf., client ou gouvernorat…" className="w-80 sm:w-96" />
-              <Select value={filter} onValueChange={(value) => { setFilter(value); setPage(1); }}>
-                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  {statuses.map((s) => (
-                    <SelectItem key={s} value={s}>{(ORDER_STATUS_LABELS as any)[s] ?? s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Filtrer par date :</span>
-              <label className="flex items-center gap-1">
-                <span className="text-muted-foreground">Du</span>
-                <input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="h-9 rounded-md border border-border bg-card px-2 outline-none focus:border-accent-strong" />
-              </label>
-              <label className="flex items-center gap-1">
-                <span className="text-muted-foreground">Au</span>
-                <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="h-9 rounded-md border border-border bg-card px-2 outline-none focus:border-accent-strong" />
-              </label>
-            </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          onClick={() => exportPDF(filtered)}
+          className="h-10 gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Exporter PDF
+        </Button>
+
+        <Button
+          variant="accent"
+          onClick={() => {
+            setEditingOrderId(null);
+            setAddOpen(true);
+          }}
+          className="h-10 gap-2 shadow-sm"
+        >
+          <Plus className="h-4 w-4" />
+          Nouvelle commande
+        </Button>
+      </div>
+    </div>
+
+
+{/* ===================== ORDER STATISTICS CARDS ===================== */}
+
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+
+  {/* TOTAL COMMANDES */}
+  <button
+    type="button"
+    onClick={() => {
+      setFilter("all");
+      setPage(1);
+    }}
+    className={cn(
+      "group relative overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-200",
+      "hover:-translate-y-1 hover:border-primary/40 hover:shadow-md",
+      filter === "all" && "border-primary/50 ring-1 ring-primary/20"
+    )}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">
+          Total commandes
+        </p>
+        <h3 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+          {orderStats.total}
+        </h3>
+      </div>
+
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-transform group-hover:scale-110 dark:text-blue-400">
+        <ShoppingBag className="h-6 w-6" />
+      </div>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">
+        Toutes les commandes
+      </span>
+      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+        Voir tout →
+      </span>
+    </div>
+  </button>
+
+  {/* EN ATTENTE */}
+  <button
+    type="button"
+    onClick={() => {
+      setFilter("pending");
+      setPage(1);
+    }}
+    className={cn(
+      "group relative overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-200",
+      "hover:-translate-y-1 hover:border-amber-400/50 hover:shadow-md",
+      filter === "pending" && "border-amber-400/60 ring-1 ring-amber-400/20"
+    )}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">
+          En attente
+        </p>
+        <h3 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+          {orderStats.pending}
+        </h3>
+      </div>
+
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 transition-transform group-hover:scale-110 dark:text-amber-400">
+        <Clock3 className="h-6 w-6" />
+      </div>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">
+        À confirmer
+      </span>
+      <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+        Voir commandes →
+      </span>
+    </div>
+  </button>
+
+  {/* EN PRÉPARATION */}
+  <button
+    type="button"
+    onClick={() => {
+      setFilter("processing");
+      setPage(1);
+    }}
+    className={cn(
+      "group relative overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-200",
+      "hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-md",
+      filter === "processing" && "border-violet-400/60 ring-1 ring-violet-400/20"
+    )}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">
+          En préparation
+        </p>
+        <h3 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+          {orderStats.processing}
+        </h3>
+      </div>
+
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 transition-transform group-hover:scale-110 dark:text-violet-400">
+        <PackageCheck className="h-6 w-6" />
+      </div>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">
+        Traitement des commandes
+      </span>
+      <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">
+        Voir commandes →
+      </span>
+    </div>
+  </button>
+
+  {/* LIVRÉES */}
+  <button
+    type="button"
+    onClick={() => {
+      setFilter("delivered");
+      setPage(1);
+    }}
+    className={cn(
+      "group relative overflow-hidden rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-200",
+      "hover:-translate-y-1 hover:border-emerald-400/50 hover:shadow-md",
+      filter === "delivered" && "border-emerald-400/60 ring-1 ring-emerald-400/20"
+    )}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">
+          Livrées
+        </p>
+        <h3 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+          {orderStats.delivered}
+        </h3>
+      </div>
+
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 transition-transform group-hover:scale-110 dark:text-emerald-400">
+        <CheckCircle2 className="h-6 w-6" />
+      </div>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">
+        Commandes terminées
+      </span>
+      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+        Voir commandes →
+      </span>
+    </div>
+  </button>
+
+  {/* CHIFFRE D'AFFAIRES */}
+  <div className="group relative overflow-hidden rounded-xl border border-primary/20 bg-primary/[0.04] p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+    <div className="flex items-center justify-between">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-muted-foreground">
+          Chiffre d'affaires
+        </p>
+        <h3 className="mt-3 truncate text-2xl font-bold tracking-tight text-primary">
+          {formatPrice(orderStats.revenue)}
+        </h3>
+      </div>
+
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+        <Wallet className="h-6 w-6" />
+      </div>
+    </div>
+
+    <div className="mt-4 flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">
+        Hors commandes annulées
+      </span>
+      <span className="text-xs font-semibold text-primary">
+        {orderStats.total - orderStats.cancelled} actives
+      </span>
+    </div>
+  </div>
+
+</div>
+
+
+    {/* ===================== FILTERS ===================== */}
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold">Filtres et recherche</h2>
+          <p className="text-xs text-muted-foreground">
+            Retrouvez rapidement une commande.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_220px_auto]">
+          <div className="relative">
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Référence, client ou gouvernorat..."
+              className="h-10 pl-3"
+            />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button variant="accent" onClick={() => { setEditingOrderId(null); setAddOpen(true); }}>
-              <Plus className="h-4 w-4" /> Nouvelle commande
-            </Button>
-            <Button onClick={() => exportPDF(filtered)} className="bg-blue-600 text-white hover:bg-blue-700">
-              <Download className="h-4 w-4" /> Export PDF
-            </Button>
+          <Select
+            value={filter}
+            onValueChange={(value) => {
+              setFilter(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-10 w-full">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              {statuses.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {(ORDER_STATUS_LABELS as any)[s] ?? s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Période :
+            </span>
+
+            <label className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Du</span>
+              <input
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setPage(1);
+                }}
+                className="h-10 min-w-0 rounded-md border border-border bg-background px-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            <label className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Au</span>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  setPage(1);
+                }}
+                className="h-10 min-w-0 rounded-md border border-border bg-background px-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
           </div>
         </div>
+
         {selectedIds.length > 0 && (
-          <div className="mt-3">
-            <Button variant="destructive" onClick={() => setBulkDeleteOpen(true)}>
-              <Trash2 className="h-4 w-4" /> Supprimer ({selectedIds.length})
+          <div className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50/70 p-3 dark:border-red-900/50 dark:bg-red-950/20 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
+              <Trash2 className="h-4 w-4" />
+              <span className="font-semibold">
+                {selectedIds.length} commande(s) sélectionnée(s)
+              </span>
+            </div>
+
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Supprimer la sélection
             </Button>
           </div>
         )}
       </div>
+    </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+    {/* ===================== TABLE ===================== */}
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-semibold text-foreground">
+            Liste des commandes
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {filtered.length} résultat(s) correspondant à vos critères
+          </p>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          Page {page} sur {Math.max(totalPages, 1)}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-12 pl-5">
                 <Checkbox
                   aria-label="Sélectionner tout"
-                  checked={selectedIds.length > 0 && selectedIds.length === filtered.length}
+                  checked={
+                    selectedIds.length > 0 &&
+                    selectedIds.length === filtered.length
+                  }
                   onCheckedChange={(v) => toggleSelectAll(Boolean(v))}
                 />
               </TableHead>
-              <TableHead>Référence</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Gouvernorat</TableHead>
-              <TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
+                Référence
+              </TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
+                Client
+              </TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
+                Gouvernorat
+              </TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
                 <button
                   type="button"
                   onClick={() => {
@@ -1257,106 +1680,241 @@ function AdminOrders() {
                     setDateSortDir(null);
                     setPage(1);
                   }}
-                  className="inline-flex items-center gap-2"
+                  className="inline-flex items-center gap-2 transition hover:text-primary"
                 >
-                  <span>Total</span>
-                  <SortArrow dir={sortDir} className="text-black" />
+                  Total
+                  <SortArrow dir={sortDir} />
                 </button>
               </TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
+                Statut
+              </TableHead>
+
+              <TableHead className="whitespace-nowrap font-semibold">
                 <button
                   type="button"
                   onClick={() => {
-                    setDateSortDir((current) => (current === "asc" ? "desc" : "asc"));
+                    setDateSortDir((current) =>
+                      current === "asc" ? "desc" : "asc"
+                    );
                     setSortDir(null);
                     setPage(1);
                   }}
-                  className="inline-flex items-center gap-2"
+                  className="inline-flex items-center gap-2 transition hover:text-primary"
                 >
-                  <span>Date</span>
-                  <SortArrow dir={dateSortDir} ariaLabel="Trier par date" />
+                  Date
+                  <SortArrow
+                    dir={dateSortDir}
+                    ariaLabel="Trier par date"
+                  />
                 </button>
               </TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+
+              <TableHead className="pr-5 text-right font-semibold">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-14 text-center text-muted-foreground">
-                  <div className="flex items-center justify-center">
+                <TableCell
+                  colSpan={8}
+                  className="py-16 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center justify-center gap-3">
                     <Spinner showLabel />
+                    <span className="text-sm">
+                      Chargement des commandes...
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>
             ) : paginated.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-14 text-center text-muted-foreground">
-                  Aucune commande ne correspond à ces critères.
+                <TableCell colSpan={8} className="py-16">
+                  <div className="flex flex-col items-center justify-center gap-3 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                      <FileText className="h-7 w-7 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Aucune commande trouvée
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Aucune commande ne correspond aux critères sélectionnés.
+                      </p>
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               paginated.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="w-8">
-                    <Checkbox checked={selectedIds.includes(o.id)} onCheckedChange={(v) => toggleSelect(o.id, Boolean(v))} />
+                <TableRow
+                  key={o.id}
+                  className="group transition-colors hover:bg-muted/40"
+                >
+                  <TableCell className="pl-5">
+                    <Checkbox
+                      checked={selectedIds.includes(o.id)}
+                      onCheckedChange={(v) =>
+                        toggleSelect(o.id, Boolean(v))
+                      }
+                    />
                   </TableCell>
-                  <TableCell className="font-medium">{o.reference}</TableCell>
+
                   <TableCell>
-                    <p>{o.customer_name}</p>
-                    <p className="text-xs text-muted-foreground">{o.customer_phone}</p>
+                    <span className="whitespace-nowrap font-semibold text-primary">
+                      {o.reference}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{o.governorate}</TableCell>
-                 
-                  <TableCell className="font-semibold">{formatPrice(o.total)}</TableCell>
+
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-sm font-medium", ORDER_STATUS_STYLES[o.status])}>
+                    <div className="flex min-w-[160px] items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {o.customer_name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {o.customer_phone}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <span className="whitespace-nowrap text-sm text-muted-foreground">
+                      {o.governorate || "—"}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    <span className="whitespace-nowrap font-semibold text-foreground">
+                      {formatPrice(o.total)}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold",
+                          ORDER_STATUS_STYLES[o.status]
+                        )}
+                      >
                         {(ORDER_STATUS_LABELS as any)[o.status] ?? o.status}
                       </span>
-                      {o.status !== "delivered" && o.status !== "cancelled" && (
-                        <Popover open={editingStatusId === o.id} onOpenChange={(open) => setEditingStatusId(open ? o.id : null)}>
-                          <PopoverTrigger asChild>
-                              <Button size="icon" variant="ghost" aria-label="Modifier le statut">
+
+                      {o.status !== "delivered" &&
+                        o.status !== "cancelled" && (
+                          <Popover
+                            open={editingStatusId === o.id}
+                            onOpenChange={(open) =>
+                              setEditingStatusId(open ? o.id : null)
+                            }
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Modifier le statut"
+                                className="h-8 w-8 rounded-lg opacity-60 transition hover:bg-muted hover:opacity-100"
+                              >
                                 <SlidersHorizontal className="h-4 w-4" />
                               </Button>
                             </PopoverTrigger>
-                          <PopoverContent className="w-44 p-2">
-                            <div className="flex flex-col gap-1">
-                              {statuses
-                                .filter((s) => s === o.status || (allowedTransitions[o.status] || []).includes(s))
-                                .map((s) => (
-                                  <button
-                                    key={s}
-                                    type="button"
-                                    className="w-full text-left rounded px-2 py-1 text-sm hover:bg-accent"
-                                    onClick={() => { requestStatusChange(o.id, s as OrderStatus); setEditingStatusId(null); }}
-                                  >
-                                    {(ORDER_STATUS_LABELS as any)[s] ?? s}
-                                  </button>
-                                ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
+
+                            <PopoverContent className="w-48 p-2">
+                              <p className="px-2 pb-2 text-xs font-semibold text-muted-foreground">
+                                Changer le statut
+                              </p>
+
+                              <div className="flex flex-col gap-1">
+                                {statuses
+                                  .filter(
+                                    (s) =>
+                                      s === o.status ||
+                                      (allowedTransitions[o.status] || []).includes(s)
+                                  )
+                                  .map((s) => (
+                                    <button
+                                      key={s}
+                                      type="button"
+                                      className={cn(
+                                        "w-full rounded-md px-3 py-2 text-left text-sm transition hover:bg-muted",
+                                        s === o.status &&
+                                          "bg-primary/5 font-semibold text-primary"
+                                      )}
+                                      onClick={() => {
+                                        requestStatusChange(
+                                          o.id,
+                                          s as OrderStatus
+                                        );
+                                        setEditingStatusId(null);
+                                      }}
+                                    >
+                                      {(ORDER_STATUS_LABELS as any)[s] ?? s}
+                                    </button>
+                                  ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                     </div>
                   </TableCell>
-                   <TableCell className="text-muted-foreground">
-                    {o.created_at ? new Date(o.created_at).toLocaleDateString("fr-FR") : ""}
+
+                  <TableCell>
+                    <span className="whitespace-nowrap text-sm text-muted-foreground">
+                      {o.created_at
+                        ? new Date(o.created_at).toLocaleDateString("fr-FR")
+                        : "—"}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setDetail(o)}>
-                        <Eye className="h-5 w-4" />
+
+                  <TableCell className="pr-5">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setDetail(o)}
+                        aria-label="Voir les détails"
+                        className="h-9 w-9 rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => exportOrderPDF(o)} aria-label="Télécharger le bon de commande">
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => exportOrderPDF(o)}
+                        aria-label="Télécharger le bon de commande"
+                        className="h-9 w-9 rounded-lg text-muted-foreground transition hover:bg-blue-50 hover:text-blue-600"
+                      >
                         <FileDown className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(o)} aria-label="Éditer">
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => openEdit(o)}
+                        aria-label="Éditer"
+                        className="h-9 w-9 rounded-lg text-muted-foreground transition hover:bg-amber-50 hover:text-amber-600"
+                      >
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setOrderToDelete(o.id)}>
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 rounded-lg text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
+                        onClick={() => setOrderToDelete(o.id)}
+                        aria-label="Supprimer"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1366,60 +1924,97 @@ function AdminOrders() {
             )}
           </TableBody>
         </Table>
-        </div>
-        <div className="flex items-center justify-between gap-4 px-3 py-3">
-          <div className="text-sm text-foreground">
-            {filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} sur {filtered.length}
-          </div>
-          <div>
-            <Pagination className="mx-0 w-auto justify-end text-foreground">
-              <PaginationContent>
-                <PaginationPrevious
-                  href="#"
-                  className={page === 1 ? "pointer-events-none opacity-50 text-foreground" : "text-foreground"}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setPage((p) => Math.max(1, p - 1));
-                  }}
-                  aria-disabled={page === 1}
-                />
-                {(() => {
-                  const pages: number[] = [];
-                  const maxShown = 7;
-                  if (totalPages <= maxShown) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                    const start = Math.max(1, page - 3);
-                    const end = Math.min(totalPages, start + maxShown - 1);
-                    for (let i = start; i <= end; i++) pages.push(i);
-                    if (end < totalPages) pages.push(totalPages);
-                  }
-                  return pages.map((p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        href="#"
-                        isActive={p === page}
-                        className="text-foreground"
-                        onClick={(e) => { e.preventDefault(); setPage(p); }}
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ));
-                })()}
-                <PaginationNext
-                  href="#"
-                  className={page === totalPages ? "pointer-events-none opacity-50 text-foreground" : "text-foreground"}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setPage((p) => Math.min(totalPages, p + 1));
-                  }}
-                  aria-disabled={page === totalPages}
-                />
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </div>
+      </div>
+
+      {/* ===================== PAGINATION ===================== */}
+      <div className="flex flex-col gap-3 border-t border-border bg-muted/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Affichage{" "}
+          <span className="font-semibold text-foreground">
+            {filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}
+            {"–"}
+            {Math.min(page * pageSize, filtered.length)}
+          </span>{" "}
+          sur{" "}
+          <span className="font-semibold text-foreground">
+            {filtered.length}
+          </span>{" "}
+          commande(s)
+        </p>
+
+        <Pagination className="mx-0 w-auto justify-end">
+          <PaginationContent>
+            <PaginationPrevious
+              href="#"
+              className={
+                page === 1
+                  ? "pointer-events-none opacity-40"
+                  : "cursor-pointer"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setPage((p) => Math.max(1, p - 1));
+              }}
+              aria-disabled={page === 1}
+            />
+
+            {(() => {
+              const pages: number[] = [];
+              const maxShown = 7;
+
+              if (totalPages <= maxShown) {
+                for (let i = 1; i <= totalPages; i++) {
+                  pages.push(i);
+                }
+              } else {
+                const start = Math.max(1, page - 3);
+                const end = Math.min(totalPages, start + maxShown - 1);
+
+                for (let i = start; i <= end; i++) {
+                  pages.push(i);
+                }
+
+                if (end < totalPages) {
+                  pages.push(totalPages);
+                }
+              }
+
+              return pages.map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    href="#"
+                    isActive={p === page}
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(p);
+                    }}
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ));
+            })()}
+
+            <PaginationNext
+              href="#"
+              className={
+                page === totalPages
+                  ? "pointer-events-none opacity-40"
+                  : "cursor-pointer"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setPage((p) => Math.min(totalPages, p + 1));
+              }}
+              aria-disabled={page === totalPages}
+            />
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </div>
+
+    {/* Garde ici tous tes Dialog existants, sans modification */}
 
       <Dialog open={addOpen} onOpenChange={(o) => {
         setAddOpen(o);
@@ -2086,4 +2681,5 @@ function AdminOrders() {
       </Dialog>
     </div>
   );
+  
 }

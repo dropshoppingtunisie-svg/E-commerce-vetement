@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Banknote, Truck } from "lucide-react";
+import { CheckCircle2, Banknote, Truck, Phone } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { Button } from "@/components/ui/button";
-
+import { useSiteSettings } from "@/context/SiteSettingsContext";
 export const Route = createFileRoute("/commande-confirmee")({
   validateSearch: (search: Record<string, unknown>) => ({
     ref: typeof search["ref"] === "string" ? search["ref"] : "CMD-2026-0000",
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/commande-confirmee")({
 
 function ConfirmationPage() {
   const { ref } = Route.useSearch();
+  const { settings } = useSiteSettings();
 
   return (
     <StoreLayout>
@@ -50,8 +51,18 @@ function ConfirmationPage() {
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button variant="accent" asChild><Link to="/">Continuer mes achats</Link></Button>
-          <Button variant="outline" asChild><Link to="/compte/commandes">Suivre mes commandes</Link></Button>
+          <Button variant="accent" asChild>
+            <Link to="/">Continuer mes achats</Link>
+          </Button>
+
+          {settings?.phone && (
+            <Button variant="outline" asChild>
+              <a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}>
+                <Phone className="mr-2 h-4 w-4" />
+                Nous appeler
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </StoreLayout>
