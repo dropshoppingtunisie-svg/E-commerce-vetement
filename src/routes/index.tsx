@@ -41,7 +41,7 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Maison Mode | Boutique de vêtements en Tunisie" },
+      { title: "Bufanda | Boutique de vêtements en Tunisie" },
       {
         name: "description",
         content:
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/")({
       },
       {
         property: "og:title",
-        content: "Maison Mode | Boutique de vêtements",
+        content: "Bufanda | Boutique de vêtements",
       },
       {
         property: "og:description",
@@ -142,19 +142,23 @@ function HomePage() {
               <CarouselContent>
                 {banners.map((banner) => {
                   const slide = (
-                    <div className="group relative aspect-[4/5] w-full overflow-hidden bg-surface sm:aspect-[16/7] lg:aspect-[21/8]">
+                    <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-[#edf3ed] sm:aspect-[16/7] lg:aspect-[21/8]">
                       <img
                         src={banner.image_url}
-                        alt={banner.title ?? "Collection de vêtements"}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                      />
+                        alt={banner.title ?? "Collection Bufanda"}
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="async"
+                        draggable={false}
+                        className="absolute inset-0 h-full w-full object-contain object-center"
+                      />                     
 
                       <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
 
                       {(banner.title || banner.subtitle) && (
                         <div className="absolute inset-0 flex flex-col items-start justify-center p-6 text-white sm:p-12 lg:p-16">
                           <span className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-white/80 sm:text-sm">
-                            Maison Mode
+                            Bufanda
                           </span>
 
                           {banner.title && (
@@ -221,7 +225,7 @@ function HomePage() {
 
             <div className="relative max-w-2xl">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-neutral-600">
-                Maison Mode
+                Bufanda
               </p>
 
               <h1 className="font-display text-4xl font-semibold leading-tight text-neutral-900 sm:text-6xl">

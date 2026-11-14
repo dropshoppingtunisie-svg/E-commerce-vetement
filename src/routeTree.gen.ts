@@ -22,6 +22,7 @@ import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oubl
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminBannersRouteImport } from './routes/admin.banners'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
@@ -103,6 +104,11 @@ const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAvisRoute = AdminAvisRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/promotions': typeof PromotionsRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
+    | '/admin/announcements'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
+    | '/admin/announcements'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/promotions'
     | '/reinitialiser-mot-de-passe'
+    | '/admin/announcements'
     | '/admin/avis'
     | '/admin/banners'
     | '/admin/categories'
@@ -495,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/avis': {
       id: '/admin/avis'
       path: '/avis'
@@ -618,6 +637,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminAvisRoute: typeof AdminAvisRoute
   AdminBannersRoute: typeof AdminBannersRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
@@ -632,6 +652,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminAvisRoute: AdminAvisRoute,
   AdminBannersRoute: AdminBannersRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,

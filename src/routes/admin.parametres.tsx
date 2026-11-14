@@ -347,7 +347,7 @@ function AdminParametres() {
                   type="email"
                   value={form.email ?? ""}
                   onChange={(e) => setField("email", e.target.value)}
-                  placeholder="contact@Maison Mode.tn"
+                  placeholder="contact@Bufanda.tn"
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">

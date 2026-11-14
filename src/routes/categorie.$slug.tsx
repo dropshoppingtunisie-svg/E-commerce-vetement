@@ -28,9 +28,9 @@ export const Route = createFileRoute("/categorie/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Catégorie introuvable — Maison Mode" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Catégorie introuvable — Bufanda" }, { name: "robots", content: "noindex" }] };
     }
-    const title = `${loaderData.name} — Maison Mode`;
+    const title = `${loaderData.name} — Bufanda`;
     const description =
       loaderData.description || `Tous nos produits ${loaderData.name} en Tunisie, paiement à la livraison.`;
     return {

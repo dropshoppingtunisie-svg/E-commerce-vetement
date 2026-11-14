@@ -1,0 +1,99 @@
+
+.bufanda-announcement {
+  --announcement-speed: 32s;
+
+  position: relative;
+  z-index: 50;
+  width: 100%;
+  height: 42px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+
+  background: #064b27;
+  color: #ffffff;
+
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.announcement-track {
+  display: flex;
+  width: max-content;
+  min-width: max-content;
+  flex-shrink: 0;
+
+  animation: bufanda-marquee var(--announcement-speed) linear infinite;
+  will-change: transform;
+}
+
+.announcement-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: max-content;
+}
+
+.announcement-item {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 14px;
+
+  padding-inline: 28px;
+
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+.announcement-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  background: #a7e5b6;
+  box-shadow: 0 0 10px rgb(167 229 182 / 50%);
+}
+
+.announcement-separator {
+  margin-left: 14px;
+  color: #a7e5b6;
+  font-size: 13px;
+}
+
+@keyframes bufanda-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.bufanda-announcement:hover .announcement-track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 640px) {
+  .bufanda-announcement {
+    height: 38px;
+    --announcement-speed: 24s;
+  }
+
+  .announcement-item {
+    padding-inline: 18px;
+    font-size: 11px;
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-track {
+    animation: none;
+  }
+}

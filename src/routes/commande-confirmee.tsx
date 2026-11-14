@@ -9,10 +9,10 @@ export const Route = createFileRoute("/commande-confirmee")({
   }),
   head: () => ({
     meta: [
-      { title: "Commande confirmée : Maison Mode" },
+      { title: "Commande confirmée : Bufanda" },
       { name: "description", content: "Votre commande a bien été enregistrée. Paiement à la livraison." },
-      { property: "og:title", content: "Commande confirmée : Maison Mode" },
-      { property: "og:description", content: "Merci pour votre commande Maison Mode." },
+      { property: "og:title", content: "Commande confirmée : Bufanda" },
+      { property: "og:description", content: "Merci pour votre commande Bufanda." },
       { name: "robots", content: "noindex" },
     ],
   }),

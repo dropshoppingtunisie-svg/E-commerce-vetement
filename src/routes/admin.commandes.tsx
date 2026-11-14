@@ -627,7 +627,7 @@ function AdminOrders() {
     doc.text("Bon de commande", 14, y);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("Maison Mode", pageWidth - 14, y, { align: "right" });
+    doc.text("Bufanda", pageWidth - 14, y, { align: "right" });
     y += 10;
     doc.setDrawColor(210, 210, 210);
     doc.line(14, y, pageWidth - 14, y);

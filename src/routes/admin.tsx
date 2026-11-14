@@ -2,8 +2,20 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
-  BadgePercent, ChevronLeft, Image, LayoutDashboard, ListTree, Menu, Package, ShoppingBag, Store,
-  Bell, User, LogOut, MessageCircle,
+  BadgePercent,
+  ChevronLeft,
+  Image,
+  LayoutDashboard,
+  ListTree,
+  Menu,
+  Package,
+  ShoppingBag,
+  Store,
+  Bell,
+  User,
+  LogOut,
+  MessageCircle,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,10 +26,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Administration :  Maison Mode" },
-      { name: "description", content: "Administration Maison Mode : catalogue, promotions et commandes." },
-      { property: "og:title", content: "Administration : Maison Mode" },
-      { property: "og:description", content: "Interface d'administration de la boutique Maison Mode." },
+      { title: "Administration :  Bufanda" },
+      { name: "description", content: "Administration Bufanda : catalogue, promotions et commandes." },
+      { property: "og:title", content: "Administration : Bufanda" },
+      { property: "og:description", content: "Interface d'administration de la boutique Bufanda." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -31,6 +43,7 @@ const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   // { to: "/admin/notifications", label: "Notifications", icon: Bell, exact: false },
   { to: "/admin/banners", label: "Bannières", icon: Image, exact: false },
+  { to: "/admin/announcements", label: "Annonces", icon: Megaphone, exact: false },
   { to: "/admin/produits", label: "Produits", icon: Package, exact: false },
   { to: "/admin/commandes", label: "Commandes", icon: ShoppingBag, exact: false },
   { to: "/admin/promotions", label: "Promotions & coupons", icon: BadgePercent, exact: false },
@@ -196,7 +209,7 @@ function AdminLayout() {
       >
         <div className="relative flex h-16 items-center gap-2 border-b border-border px-5">
           <span className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-extrabold">
-            Maison <span className="text-accent-strong">Mode</span>
+            Bu<span className="text-accent-strong">fanda</span>
           </span>
           <button className="ml-auto lg:hidden" onClick={() => setOpen(false)} aria-label="Fermer">
             <ChevronLeft className="h-5 w-5" />

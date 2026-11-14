@@ -584,3 +584,71 @@ create trigger trg_promotions_refresh after insert or update or delete on promot
 
 -- NOTE: à dupliquer/adapter pour attributes, attribute_values, product_variants (write),
 -- promotions, coupons, order_items, addresses, carts, cart_items etc.
+
+
+
+
+-- ==========================================
+-- BUFANDA - ANNOUNCEMENTS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Automatically update updated_at
+CREATE OR REPLACE FUNCTION public.update_announcement_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS set_announcement_updated_at
+ON public.announcements;
+
+CREATE TRIGGER set_announcement_updated_at
+BEFORE UPDATE ON public.announcements
+FOR EACH ROW
+EXECUTE FUNCTION public.update_announcement_timestamp();
+
+-- Enable RLS
+ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
+
+-- Everyone can read active announcements
+DROP POLICY IF EXISTS "Public can read active announcements"
+ON public.announcements;
+
+CREATE POLICY "Public can read active announcements"
+ON public.announcements
+FOR SELECT
+TO anon, authenticated
+USING (is_active = TRUE);
+
+-- Only admins can manage announcements.
+-- Requires role=admin in Supabase Auth app_metadata.
+DROP POLICY IF EXISTS "Admins can manage announcements"
+ON public.announcements;
+
+CREATE POLICY "Admins can manage announcements"
+ON public.announcements
+FOR ALL
+TO authenticated
+USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+)
+WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+);
+
+-- Index for storefront queries
+CREATE INDEX IF NOT EXISTS idx_announcements_active_order
+ON public.announcements (is_active, sort_order);

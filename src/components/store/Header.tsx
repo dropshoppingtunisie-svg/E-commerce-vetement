@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MegaMenu } from "./MegaMenu";
+import AnnouncementBar from "@/components/ui/AnnouncementBar";
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -34,7 +35,7 @@ function Logo({ className }: { className?: string }) {
   return (
     <Link to="/" className={className}>
       <span className="font-display text-2xl font-semibold tracking-tight">
-        Maison <span className="text-accent-strong">Mode</span>
+        Bu<span className="text-accent-strong">fanda</span>
       </span>
     </Link>
   );
@@ -97,31 +98,9 @@ export function Header() {
   }, [settings]);
 
   return (
+    
     <header className="sticky top-0 z-50 bg-card">
-      <div className="weave-texture border-b border-border/60 bg-surface text-foreground">
-        <div className="container-page relative flex h-10 items-center justify-center gap-2 text-[13px]">
-          <p className="flex items-center gap-2">
-            <Phone className="h-3.5 w-3.5 text-accent-strong" />
-            {settings?.phone ? `${settings.phone} — Livraison 24/48h` : "Livraison 24/48h"}
-          </p>
-          <p className="hidden font-medium sm:block">— Paiement à la livraison partout en Tunisie</p>
-
-          <div className="absolute right-4 hidden items-center gap-3 sm:flex">
-            {socialLinks.map(({ key, href, label, Icon }) => (
-              <a
-                key={key}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={label}
-                className="text-muted-foreground transition-colors hover:text-accent-strong"
-              >
-                <Icon className="h-3.5 w-3.5" />
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
+     <AnnouncementBar />
 
       <div className="border-b border-surface lg:border-b-0">
         <div className="container-page grid h-20 grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid-cols-[auto_1fr_auto]">

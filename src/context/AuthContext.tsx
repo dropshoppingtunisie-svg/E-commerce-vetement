@@ -44,7 +44,7 @@ type AuthContextValue = {
   closeAuth: () => void;
 };
 
-export const PENDING_SIGNUP_STORAGE_KEY = "Maison Mode.pendingSignup";
+export const PENDING_SIGNUP_STORAGE_KEY = "Bufanda.pendingSignup";
 
 export const isPendingSignup = () => {
   if (typeof window === "undefined") return false;

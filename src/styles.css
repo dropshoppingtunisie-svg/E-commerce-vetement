@@ -1,3 +1,4 @@
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -5,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================
-   DESIGN SYSTEM — FASHION STORE
-   Style : moderne, minimaliste, élégant
-   Palette : noir, blanc cassé, beige et taupe
+   BUFANDA — PREMIUM DEEP GREEN DESIGN SYSTEM
+   Deep Emerald · Forest Green · Olive · Warm Ivory
+   Tailwind CSS v4 + shadcn/ui
    ========================================================= */
 
 @theme inline {
@@ -21,33 +22,23 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-
-  --color-ring-offset-background: var(--background);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -64,212 +55,212 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Couleurs personnalisées */
   --color-accent-strong: var(--accent-strong);
   --color-accent-strong-foreground: var(--accent-strong-foreground);
-
   --color-success: var(--success);
   --color-warning: var(--warning);
-
   --color-surface: var(--surface);
   --color-ocre: var(--ocre);
   --color-olive: var(--olive);
   --color-deep: var(--deep);
   --color-deep-foreground: var(--deep-foreground);
 
-  /* Typographie */
-  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Karla", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
 
-  /* Ombres élégantes et discrètes */
-  --shadow-card:
-    0 1px 3px oklch(0.2 0 0 / 0.04),
-    0 8px 24px oklch(0.2 0 0 / 0.06);
-
-  --shadow-pop:
-    0 12px 32px oklch(0.2 0 0 / 0.12);
+  --shadow-card: 0 2px 8px rgb(10 50 29 / 6%), 0 14px 36px rgb(10 50 29 / 9%);
+  --shadow-pop: 0 18px 48px rgb(5 38 21 / 18%);
+  --shadow-soft: 0 8px 24px rgb(10 50 29 / 9%);
 }
 
 /* =========================================================
-   LIGHT THEME
+   LIGHT THEME — DEEPER GREEN ACCENTS
+   Keep ivory backgrounds, darken green identity.
    ========================================================= */
 
 :root {
-  --radius: 0.5rem;
+  color-scheme: light;
+  --radius: 1rem;
 
-  /* Palette Fashion : noir, blanc cassé, beige */
-  --background: oklch(0.985 0.004 85);
-  --foreground: oklch(0.18 0.008 55);
+  --background: oklch(0.975 0.010 145);
+  --foreground: oklch(0.19 0.055 155);
+  --surface: oklch(0.95 0.018 145);
 
-  --surface: oklch(0.955 0.008 80);
+  --card: oklch(0.995 0.003 145);
+  --card-foreground: oklch(0.19 0.055 155);
+  --popover: oklch(0.995 0.003 145);
+  --popover-foreground: oklch(0.19 0.055 155);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.008 55);
+  /* Main brand green */
+  --primary: oklch(0.36 0.115 153);
+  --primary-foreground: oklch(0.99 0.005 145);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.008 55);
+  /* Secondary green */
+  --secondary: oklch(0.89 0.045 150);
+  --secondary-foreground: oklch(0.23 0.065 155);
 
-  /* Noir élégant */
-  --primary: oklch(0.19 0.008 55);
-  --primary-foreground: oklch(0.985 0.004 85);
+  --muted: oklch(0.94 0.018 150);
+  --muted-foreground: oklch(0.43 0.045 155);
 
-  /* Beige clair */
-  --secondary: oklch(0.94 0.012 80);
-  --secondary-foreground: oklch(0.22 0.008 55);
+  --accent: oklch(0.86 0.065 150);
+  --accent-foreground: oklch(0.20 0.065 155);
 
-  --muted: oklch(0.95 0.008 80);
-  --muted-foreground: oklch(0.48 0.012 60);
+  /* Strong forest green */
+  --accent-strong: oklch(56.467% 0.17993 144.579);
+  --accent-strong-foreground: oklch(0.99 0.005 145);
 
-  /* Accent taupe */
-  --accent: oklch(0.92 0.018 75);
-  --accent-foreground: oklch(0.25 0.012 55);
+  --ocre: oklch(0.72 0.09 85);
+  --olive: oklch(0.44 0.085 140);
 
-  --accent-strong: oklch(0.42 0.025 55);
-  --accent-strong-foreground: oklch(0.985 0.004 85);
+  /* Deep forest */
+  --deep: oklch(0.19 0.065 155);
+  --deep-foreground: oklch(0.97 0.015 145);
 
-  /* Couleurs complémentaires */
-  --ocre: oklch(0.76 0.045 75);
-  --olive: oklch(0.48 0.035 125);
+  --success: oklch(0.40 0.12 150);
+  --warning: oklch(0.72 0.14 82);
 
-  --deep: oklch(0.19 0.008 55);
-  --deep-foreground: oklch(0.94 0.012 80);
+  --destructive: oklch(0.55 0.19 28);
+  --destructive-foreground: oklch(0.99 0.005 90);
 
-  /* États */
-  --success: oklch(0.48 0.09 145);
-  --warning: oklch(0.72 0.12 75);
+  --border: oklch(0.86 0.035 150);
+  --input: oklch(0.84 0.04 150);
+  --ring: oklch(0.42 0.12 153);
 
-  --destructive: oklch(0.52 0.19 25);
-  --destructive-foreground: oklch(0.985 0.004 85);
-
-  /* Bordures et champs */
-  --border: oklch(0.89 0.008 75);
-  --input: oklch(0.89 0.008 75);
-  --ring: oklch(0.42 0.025 55);
-
-  /* Graphiques */
-  --chart-1: oklch(0.19 0.008 55);
-  --chart-2: oklch(0.55 0.025 60);
-  --chart-3: oklch(0.72 0.045 75);
-  --chart-4: oklch(0.48 0.035 125);
-  --chart-5: oklch(0.82 0.015 80);
+  /* Charts */
+  --chart-1: oklch(0.34 0.12 153);
+  --chart-2: oklch(0.43 0.11 145);
+  --chart-3: oklch(0.63 0.10 95);
+  --chart-4: oklch(0.30 0.08 175);
+  --chart-5: oklch(0.54 0.09 150);
 
   /* Sidebar */
-  --sidebar: oklch(0.985 0.004 85);
-  --sidebar-foreground: oklch(0.18 0.008 55);
-
-  --sidebar-primary: oklch(0.19 0.008 55);
-  --sidebar-primary-foreground: oklch(0.985 0.004 85);
-
-  --sidebar-accent: oklch(0.92 0.018 75);
-  --sidebar-accent-foreground: oklch(0.25 0.012 55);
-
-  --sidebar-border: oklch(0.89 0.008 75);
-  --sidebar-ring: oklch(0.42 0.025 55);
+  --sidebar: oklch(0.19 0.065 155);
+  --sidebar-foreground: oklch(0.97 0.015 145);
+  --sidebar-primary: oklch(0.69 0.12 145);
+  --sidebar-primary-foreground: oklch(0.16 0.055 155);
+  --sidebar-accent: oklch(0.27 0.075 155);
+  --sidebar-accent-foreground: oklch(0.98 0.01 145);
+  --sidebar-border: oklch(0.31 0.065 155);
+  --sidebar-ring: oklch(0.64 0.12 145);
 }
 
 /* =========================================================
-   DARK THEME
+   DARK THEME — DEEP FOREST GREEN
    ========================================================= */
 
 .dark {
-  --radius: 0.5rem;
+  color-scheme: dark;
 
-  --background: oklch(0.16 0.006 55);
-  --foreground: oklch(0.96 0.004 85);
+  --background: oklch(0.14 0.035 155);
+  --foreground: oklch(0.96 0.018 145);
+  --surface: oklch(0.18 0.04 155);
 
-  --surface: oklch(0.22 0.008 55);
+  --card: oklch(0.195 0.04 155);
+  --card-foreground: oklch(0.96 0.018 145);
+  --popover: oklch(0.21 0.045 155);
+  --popover-foreground: oklch(0.96 0.018 145);
 
-  --card: oklch(0.21 0.008 55);
-  --card-foreground: oklch(0.96 0.004 85);
+  --primary: oklch(0.62 0.13 150);
+  --primary-foreground: oklch(0.13 0.04 155);
 
-  --popover: oklch(0.21 0.008 55);
-  --popover-foreground: oklch(0.96 0.004 85);
+  --secondary: oklch(0.25 0.055 155);
+  --secondary-foreground: oklch(0.95 0.02 145);
 
-  --primary: oklch(0.94 0.012 80);
-  --primary-foreground: oklch(0.19 0.008 55);
+  --muted: oklch(0.23 0.04 155);
+  --muted-foreground: oklch(0.72 0.035 150);
 
-  --secondary: oklch(0.28 0.008 55);
-  --secondary-foreground: oklch(0.96 0.004 85);
+  --accent: oklch(0.27 0.065 155);
+  --accent-foreground: oklch(0.96 0.018 145);
 
-  --muted: oklch(0.26 0.008 55);
-  --muted-foreground: oklch(0.72 0.012 70);
+  --accent-strong: oklch(0.56 0.13 150);
+  --accent-strong-foreground: oklch(0.98 0.01 145);
 
-  --accent: oklch(0.3 0.012 60);
-  --accent-foreground: oklch(0.96 0.004 85);
+  --ocre: oklch(0.72 0.09 85);
+  --olive: oklch(0.57 0.10 145);
 
-  --accent-strong: oklch(0.76 0.045 75);
-  --accent-strong-foreground: oklch(0.16 0.006 55);
+  --deep: oklch(0.91 0.035 145);
+  --deep-foreground: oklch(0.16 0.05 155);
 
-  --ocre: oklch(0.72 0.045 75);
-  --olive: oklch(0.65 0.045 125);
+  --success: oklch(0.63 0.13 150);
+  --warning: oklch(0.76 0.13 82);
 
-  --deep: oklch(0.94 0.012 80);
-  --deep-foreground: oklch(0.19 0.008 55);
+  --destructive: oklch(0.62 0.17 28);
+  --destructive-foreground: oklch(0.98 0.01 90);
 
-  --success: oklch(0.7 0.1 145);
-  --warning: oklch(0.78 0.12 75);
+  --border: oklch(0.29 0.045 155);
+  --input: oklch(0.31 0.05 155);
+  --ring: oklch(0.62 0.13 150);
 
-  --destructive: oklch(0.65 0.19 25);
-  --destructive-foreground: oklch(0.96 0.004 85);
+  --chart-1: oklch(0.62 0.13 150);
+  --chart-2: oklch(0.57 0.10 145);
+  --chart-3: oklch(0.72 0.13 82);
+  --chart-4: oklch(0.55 0.09 180);
+  --chart-5: oklch(0.76 0.04 145);
 
-  --border: oklch(0.32 0.008 55);
-  --input: oklch(0.32 0.008 55);
-  --ring: oklch(0.76 0.045 75);
-
-  --chart-1: oklch(0.76 0.045 75);
-  --chart-2: oklch(0.65 0.045 125);
-  --chart-3: oklch(0.72 0.012 70);
-  --chart-4: oklch(0.55 0.025 60);
-  --chart-5: oklch(0.94 0.012 80);
-
-  --sidebar: oklch(0.19 0.008 55);
-  --sidebar-foreground: oklch(0.96 0.004 85);
-
-  --sidebar-primary: oklch(0.76 0.045 75);
-  --sidebar-primary-foreground: oklch(0.16 0.006 55);
-
-  --sidebar-accent: oklch(0.3 0.012 60);
-  --sidebar-accent-foreground: oklch(0.96 0.004 85);
-
-  --sidebar-border: oklch(0.32 0.008 55);
-  --sidebar-ring: oklch(0.76 0.045 75);
+  --sidebar: oklch(0.105 0.035 155);
+  --sidebar-foreground: oklch(0.96 0.018 145);
+  --sidebar-primary: oklch(0.62 0.13 150);
+  --sidebar-primary-foreground: oklch(0.13 0.04 155);
+  --sidebar-accent: oklch(0.21 0.055 155);
+  --sidebar-accent-foreground: oklch(0.96 0.018 145);
+  --sidebar-border: oklch(0.26 0.045 155);
+  --sidebar-ring: oklch(0.62 0.13 150);
 }
 
 /* =========================================================
-   BASE
+   BASE STYLES
    ========================================================= */
 
 @layer base {
-  * {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
     border-color: var(--color-border);
   }
 
   html {
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background-color: var(--color-background);
+    min-height: 100vh;
+    margin: 0;
+
+    background:
+      radial-gradient(ellipse at 8% 0%, rgb(20 90 49 / 8%), transparent 34%),
+      radial-gradient(ellipse at 95% 12%, rgb(35 100 55 / 7%), transparent 28%),
+      var(--color-background);
+
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-size: 0.9375rem;
-    line-height: 1.6;
+    line-height: 1.65;
+
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-foreground);
     font-family: var(--font-display);
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.2;
   }
 
-  button,
-  input,
-  textarea,
-  select {
+  p {
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button, input, textarea, select {
     font: inherit;
   }
 
@@ -277,25 +268,45 @@
     cursor: pointer;
   }
 
-  img {
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  img, video, svg {
     display: block;
     max-width: 100%;
   }
 
+  img {
+    height: auto;
+  }
+
   ::selection {
-    background-color: var(--color-accent);
-    color: var(--color-foreground);
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color:
+      color-mix(in oklch, var(--color-primary) 55%, transparent)
+      transparent;
   }
 }
 
 /* =========================================================
-   CONTAINER
+   LAYOUT UTILITIES
    ========================================================= */
 
 @utility container-page {
-  margin-inline: auto;
   width: 100%;
-  max-width: 84rem;
+  max-width: 86rem;
+  margin-inline: auto;
   padding-inline: 1rem;
 
   @media (min-width: 640px) {
@@ -307,85 +318,82 @@
   }
 }
 
-/* =========================================================
-   SECTION TITLE
-   Style minimaliste : titre + ligne fine
-   ========================================================= */
-
 @utility section-title {
   display: flex;
   align-items: center;
   gap: 1rem;
 
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.25;
   color: var(--color-foreground);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-weight: 650;
+  line-height: 1.25;
 
   &::before {
     content: "";
     flex: none;
-    width: 0.25rem;
-    height: 1.5rem;
-    background-color: var(--color-accent-strong);
+    width: 0.28rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    background: var(--color-primary);
   }
 
   &::after {
     content: "";
     flex: 1 1 auto;
     height: 1px;
-    background-color: var(--color-border);
+    background: var(--color-border);
   }
 }
-
-/* =========================================================
-   PAGE TITLE
-   ========================================================= */
 
 @utility page-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.8rem;
 
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
   color: var(--color-foreground);
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 3vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.12;
 
   &::before {
     content: "";
     flex: none;
-    width: 0.25rem;
-    height: 1.8rem;
-    background-color: var(--color-accent-strong);
+    width: 0.3rem;
+    height: 1.8em;
+    border-radius: 999px;
+    background: var(--color-primary);
   }
 }
 
 /* =========================================================
    PRODUCT LABELS
-   Compatible avec les classes existantes craft-label
    ========================================================= */
 
 @utility craft-label {
   position: relative;
-  z-index: 3;
-  display: inline-block;
+  z-index: 2;
 
-  padding: 0.35rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 
-  border-radius: 2px;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+
+  background: var(--craft-label-bg, var(--color-deep));
+  color: var(--color-deep-foreground);
 
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 750;
   line-height: 1;
+  letter-spacing: 0.065em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 
-  color: var(--color-background);
-
-  background-color: var(--craft-label-bg, var(--color-deep));
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 }
 
 @utility craft-label-sale {
@@ -393,7 +401,7 @@
 }
 
 @utility craft-label-new {
-  --craft-label-bg: var(--color-deep);
+  --craft-label-bg: var(--color-primary);
 }
 
 @utility craft-label-muted {
@@ -401,64 +409,441 @@
 }
 
 /* =========================================================
-   FASHION TEXTURE
-   Texture discrète pour les bandeaux
+   DECORATIVE SURFACES
    ========================================================= */
 
 @utility weave-texture {
-  background-image: repeating-linear-gradient(
-    45deg,
-    color-mix(in oklch, var(--color-ocre) 8%, transparent) 0 1px,
-    transparent 1px 10px
-  );
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in oklch, var(--color-primary) 20%, transparent) 1px,
+      transparent 0
+    );
+  background-size: 14px 14px;
+}
+
+@utility modern-card {
+  border: 1px solid color-mix(in oklch, var(--color-border) 82%, transparent);
+  border-radius: var(--radius-2xl);
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
+
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklch, var(--color-primary) 55%, var(--color-border));
+    box-shadow: var(--shadow-pop);
+  }
 }
 
 /* =========================================================
-   PRODUCT IMAGE HOVER
+   PRODUCT MEDIA
    ========================================================= */
 
 @utility product-image-hover {
   overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-muted);
 
   img {
-    transition: transform 500ms ease;
+    width: 100%;
+    transition: transform 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   &:hover img {
-    transform: scale(1.04);
+    transform: scale(1.06);
   }
 }
 
 /* =========================================================
-   FASHION BUTTON
+   BUTTON SYSTEM — DEEP GREEN
    ========================================================= */
 
 @utility fashion-button {
   display: inline-flex;
+  min-height: 2.8rem;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
 
-  padding: 0.8rem 1.5rem;
-
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
-
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  padding: 0.78rem 1.45rem;
 
   border: 1px solid var(--color-primary);
-  border-radius: 2px;
+  border-radius: 999px;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-accent-strong)
+  );
+
+  color: var(--color-primary-foreground);
+
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+
+  box-shadow:
+    0 6px 16px color-mix(in oklch, var(--color-primary) 28%, transparent);
 
   transition:
-    background-color 200ms ease,
-    color 200ms ease,
-    border-color 200ms ease;
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
 
   &:hover {
-    background-color: transparent;
-    color: var(--color-primary);
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+
+    box-shadow:
+      0 10px 24px color-mix(in oklch, var(--color-primary) 38%, transparent);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+@layer components {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    border-radius: 0.8rem;
+
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      background-color 180ms ease;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--color-ring);
+    outline: none;
+
+    box-shadow:
+      0 0 0 4px color-mix(in oklch, var(--color-ring) 18%, transparent);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 0.75;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-primary);
+  }
+
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [role="dialog"],
+  [data-radix-popper-content-wrapper] {
+    color: var(--color-popover-foreground);
+  }
+
+  [data-sonner-toaster] {
+    font-family: var(--font-sans);
+  }
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+@layer components {
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  thead th {
+    background: var(--color-muted);
+    color: var(--color-muted-foreground);
+
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+
+  th, td {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  tbody tr:hover {
+    background: color-mix(in oklch, var(--color-primary) 9%, transparent);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY + RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  body {
+    font-size: 0.9rem;
+  }
+
+  .section-title {
+    gap: 0.65rem;
+  }
+
+  .container-page {
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   FLOATING GREEN CIRCLES — CSS ONLY
+   Dark emerald · Forest · Olive
+   ========================================================= */
+
+body {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  z-index: -1;
+
+  display: block;
+  pointer-events: none;
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+/* Large green circles */
+
+body::before {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+
+  opacity: 0.72;
+
+  background-image:
+    radial-gradient(circle, rgb(12 90 47 / 24%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(55 105 35 / 22%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(10 100 76 / 20%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(80 105 35 / 17%) 0 34%, transparent 70%);
+
+  background-size:
+    260px 260px,
+    190px 190px,
+    145px 145px,
+    110px 110px;
+
+  background-position:
+    -90px 8%,
+    86% 18%,
+    72% 82%,
+    12% 88%;
+
+  animation: ambient-circles-drift 22s ease-in-out infinite alternate;
+}
+
+/* Smaller accent circles */
+
+body::after {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+
+  opacity: 0.68;
+
+  background-image:
+    radial-gradient(circle, rgb(8 75 39 / 23%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(85 115 45 / 20%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(12 90 65 / 19%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(70 100 35 / 18%) 0 35%, transparent 72%);
+
+  background-size:
+    125px 125px,
+    85px 85px,
+    170px 170px,
+    65px 65px;
+
+  background-position:
+    92% 54%,
+    38% 16%,
+    4% 65%,
+    57% 92%;
+
+  animation: ambient-circles-float 16s ease-in-out infinite alternate;
+}
+
+/* Animations */
+
+@keyframes ambient-circles-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(14px, -20px, 0) scale(1.025);
+  }
+
+  100% {
+    transform: translate3d(-12px, 15px, 0) scale(0.98);
+  }
+}
+
+@keyframes ambient-circles-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(-18px, 16px, 0) rotate(3deg);
+  }
+
+  100% {
+    transform: translate3d(12px, -18px, 0) rotate(-3deg);
+  }
+}
+
+/* Mobile circles */
+
+@media (max-width: 640px) {
+  body::before,
+  body::after {
+    opacity: 0.45;
+
+    background-size:
+      150px 150px,
+      110px 110px,
+      90px 90px,
+      70px 70px;
+  }
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none !important;
+  }
+}
+
+/* Dark mode ambient circles */
+
+.dark body::before {
+  opacity: 0.55;
+
+  background-image:
+    radial-gradient(circle, rgb(10 100 55 / 22%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(75 110 45 / 18%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(10 100 80 / 18%) 0 34%, transparent 70%),
+    radial-gradient(circle, rgb(90 110 40 / 13%) 0 34%, transparent 70%);
+}
+
+.dark body::after {
+  opacity: 0.48;
+
+  background-image:
+    radial-gradient(circle, rgb(8 80 45 / 20%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(80 110 50 / 16%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(10 90 70 / 15%) 0 35%, transparent 72%),
+    radial-gradient(circle, rgb(85 105 40 / 12%) 0 35%, transparent 72%);
+}
+
+/* =========================================================
+   BUFANDA — BANNER IMAGES
+   ========================================================= */
+
+.banner-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background-color: #edf1eb;
+  isolation: isolate;
+}
+
+.banner-container img,
+.banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+
+  object-fit: cover;
+  object-position: center;
+
+  image-rendering: auto;
+  filter: none;
+  opacity: 1;
+
+  transform: none;
+  backface-visibility: hidden;
+}
+
+/* Desktop */
+
+@media (min-width: 1024px) {
+  .banner-container {
+    min-height: 420px;
+  }
+}
+
+/* Tablet */
+
+@media (max-width: 1023px) {
+  .banner-container {
+    min-height: 320px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .banner-container {
+    min-height: 220px;
   }
 }

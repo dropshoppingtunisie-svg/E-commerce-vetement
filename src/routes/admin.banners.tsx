@@ -220,7 +220,13 @@ function AdminBanners() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...banners].sort((a, b) => a.position - b.position).map((banner, idx, arr) => (
             <div key={banner.id} className="overflow-hidden rounded-xl border border-border bg-card">
-              <img src={banner.image_url} alt={banner.title ?? ""} className="aspect-[21/9] w-full object-cover" />
+              <img
+  src={banner.image_url}
+  alt={banner.title ?? "Banner"}
+  loading="lazy"
+  decoding="async"
+  className="aspect-[21/9] w-full object-contain bg-muted"
+/>
               <div className="space-y-2 p-4">
                 <p className="font-semibold">{banner.title || "(sans titre)"}</p>
                 {banner.subtitle && <p className="text-sm text-muted-foreground">{banner.subtitle}</p>}
