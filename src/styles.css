@@ -74,8 +74,7 @@
 }
 
 /* =========================================================
-   LIGHT THEME — DEEPER GREEN ACCENTS
-   Keep ivory backgrounds, darken green identity.
+   LIGHT THEME
    ========================================================= */
 
 :root {
@@ -91,11 +90,9 @@
   --popover: oklch(0.995 0.003 145);
   --popover-foreground: oklch(0.19 0.055 155);
 
-  /* Main brand green */
   --primary: oklch(0.36 0.115 153);
   --primary-foreground: oklch(0.99 0.005 145);
 
-  /* Secondary green */
   --secondary: oklch(0.89 0.045 150);
   --secondary-foreground: oklch(0.23 0.065 155);
 
@@ -105,14 +102,12 @@
   --accent: oklch(0.86 0.065 150);
   --accent-foreground: oklch(0.20 0.065 155);
 
-  /* Strong forest green */
   --accent-strong: oklch(56.467% 0.17993 144.579);
   --accent-strong-foreground: oklch(0.99 0.005 145);
 
   --ocre: oklch(0.72 0.09 85);
   --olive: oklch(0.44 0.085 140);
 
-  /* Deep forest */
   --deep: oklch(0.19 0.065 155);
   --deep-foreground: oklch(0.97 0.015 145);
 
@@ -126,14 +121,12 @@
   --input: oklch(0.84 0.04 150);
   --ring: oklch(0.42 0.12 153);
 
-  /* Charts */
   --chart-1: oklch(0.34 0.12 153);
   --chart-2: oklch(0.43 0.11 145);
   --chart-3: oklch(0.63 0.10 95);
   --chart-4: oklch(0.30 0.08 175);
   --chart-5: oklch(0.54 0.09 150);
 
-  /* Sidebar */
   --sidebar: oklch(0.19 0.065 155);
   --sidebar-foreground: oklch(0.97 0.015 145);
   --sidebar-primary: oklch(0.69 0.12 145);
@@ -145,7 +138,7 @@
 }
 
 /* =========================================================
-   DARK THEME — DEEP FOREST GREEN
+   DARK THEME
    ========================================================= */
 
 .dark {
@@ -460,7 +453,7 @@
 }
 
 /* =========================================================
-   BUTTON SYSTEM — DEEP GREEN
+   BUTTON SYSTEM
    ========================================================= */
 
 @utility fashion-button {
@@ -620,6 +613,340 @@
   }
 }
 
+/* =========================================================
+   BUFANDA — ANIMATED AMBIENT BACKGROUND
+   Emerald · Forest · Olive · Gold
+   ========================================================= */
+
+body {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+/* Ambient background glow */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 10% 12%,
+      rgb(20 110 65 / 8%),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 25%,
+      rgb(150 155 65 / 7%),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 50% 90%,
+      rgb(10 105 75 / 6%),
+      transparent 30%
+    );
+}
+
+/* Ambient container */
+
+.ambient-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  overflow: hidden;
+  pointer-events: none;
+
+  contain: strict;
+}
+
+/* Base circle */
+
+.ambient-circle {
+  position: absolute;
+  display: block;
+
+  border-radius: 50%;
+  pointer-events: none;
+
+  filter: blur(2px);
+  opacity: 0.48;
+
+  will-change: transform;
+
+  animation: ambient-float 18s ease-in-out infinite alternate;
+}
+
+/* Circle 1 — Emerald */
+
+.ambient-circle:nth-child(1) {
+  width: 290px;
+  height: 290px;
+
+  top: 5%;
+  left: -110px;
+
+  background: radial-gradient(
+    circle,
+    rgb(16 130 76 / 35%) 0%,
+    rgb(16 130 76 / 13%) 45%,
+    transparent 72%
+  );
+
+  animation-duration: 21s;
+}
+
+/* Circle 2 — Olive */
+
+.ambient-circle:nth-child(2) {
+  width: 220px;
+  height: 220px;
+
+  top: 15%;
+  right: 5%;
+
+  background: radial-gradient(
+    circle,
+    rgb(155 165 65 / 34%) 0%,
+    rgb(155 165 65 / 12%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 17s;
+  animation-delay: -5s;
+}
+
+/* Circle 3 — Forest Green */
+
+.ambient-circle:nth-child(3) {
+  width: 180px;
+  height: 180px;
+
+  top: 48%;
+  left: 12%;
+
+  background: radial-gradient(
+    circle,
+    rgb(8 95 62 / 32%) 0%,
+    rgb(8 95 62 / 12%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 24s;
+  animation-delay: -8s;
+}
+
+/* Circle 4 — Soft Gold */
+
+.ambient-circle:nth-child(4) {
+  width: 250px;
+  height: 250px;
+
+  top: 55%;
+  right: -100px;
+
+  background: radial-gradient(
+    circle,
+    rgb(190 160 75 / 25%) 0%,
+    rgb(190 160 75 / 10%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 20s;
+  animation-delay: -3s;
+}
+
+/* Circle 5 — Mint Green */
+
+.ambient-circle:nth-child(5) {
+  width: 135px;
+  height: 135px;
+
+  top: 78%;
+  left: 40%;
+
+  background: radial-gradient(
+    circle,
+    rgb(65 155 115 / 30%) 0%,
+    rgb(65 155 115 / 10%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 16s;
+  animation-delay: -10s;
+}
+
+/* Circle 6 — Deep Emerald */
+
+.ambient-circle:nth-child(6) {
+  width: 110px;
+  height: 110px;
+
+  top: 35%;
+  left: 72%;
+
+  background: radial-gradient(
+    circle,
+    rgb(10 105 80 / 32%) 0%,
+    rgb(10 105 80 / 10%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 19s;
+  animation-delay: -7s;
+}
+
+/* Circle 7 — Light Olive */
+
+.ambient-circle:nth-child(7) {
+  width: 160px;
+  height: 160px;
+
+  top: 88%;
+  left: 5%;
+
+  background: radial-gradient(
+    circle,
+    rgb(145 160 75 / 24%) 0%,
+    rgb(145 160 75 / 9%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 23s;
+  animation-delay: -12s;
+}
+
+/* Circle 8 — Emerald Glow */
+
+.ambient-circle:nth-child(8) {
+  width: 200px;
+  height: 200px;
+
+  top: -80px;
+  right: 35%;
+
+  background: radial-gradient(
+    circle,
+    rgb(25 145 95 / 23%) 0%,
+    rgb(25 145 95 / 8%) 48%,
+    transparent 72%
+  );
+
+  animation-duration: 26s;
+  animation-delay: -4s;
+}
+
+/* =========================================================
+   FLOATING ANIMATION
+   ========================================================= */
+
+@keyframes ambient-float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+  }
+
+  25% {
+    transform: translate3d(35px, -28px, 0) scale(1.04);
+  }
+
+  50% {
+    transform: translate3d(-20px, 25px, 0) scale(1.08);
+  }
+
+  75% {
+    transform: translate3d(28px, 38px, 0) scale(0.96);
+  }
+
+  100% {
+    transform: translate3d(-35px, -20px, 0) scale(1.02);
+  }
+}
+
+/* =========================================================
+   DARK MODE AMBIENT BACKGROUND
+   ========================================================= */
+
+.dark .ambient-circle {
+  opacity: 0.65;
+}
+
+.dark .ambient-circle:nth-child(1) {
+  background: radial-gradient(
+    circle,
+    rgb(20 155 90 / 32%) 0%,
+    rgb(20 155 90 / 12%) 48%,
+    transparent 72%
+  );
+}
+
+.dark .ambient-circle:nth-child(2) {
+  background: radial-gradient(
+    circle,
+    rgb(155 165 65 / 25%) 0%,
+    rgb(155 165 65 / 9%) 48%,
+    transparent 72%
+  );
+}
+
+.dark .ambient-circle:nth-child(3) {
+  background: radial-gradient(
+    circle,
+    rgb(10 125 85 / 30%) 0%,
+    rgb(10 125 85 / 10%) 48%,
+    transparent 72%
+  );
+}
+
+/* =========================================================
+   MOBILE AMBIENT BACKGROUND
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .ambient-circle {
+    opacity: 0.35;
+    filter: blur(5px);
+  }
+
+  .ambient-circle:nth-child(1) {
+    width: 190px;
+    height: 190px;
+  }
+
+  .ambient-circle:nth-child(2) {
+    width: 145px;
+    height: 145px;
+  }
+
+  .ambient-circle:nth-child(3) {
+    width: 120px;
+    height: 120px;
+  }
+
+  .ambient-circle:nth-child(4) {
+    width: 160px;
+    height: 160px;
+  }
+
+  .ambient-circle:nth-child(5) {
+    width: 90px;
+    height: 90px;
+  }
+
+  .ambient-circle:nth-child(6) {
+    width: 85px;
+    height: 85px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -629,169 +956,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
 
-/* =========================================================
-   FLOATING GREEN CIRCLES — CSS ONLY
-   Dark emerald · Forest · Olive
-   ========================================================= */
-
-body {
-  position: relative;
-  isolation: isolate;
-  overflow-x: hidden;
-}
-
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: auto;
-  z-index: -1;
-
-  display: block;
-  pointer-events: none;
-  border-radius: 50%;
-  background-repeat: no-repeat;
-  will-change: transform;
-}
-
-/* Large green circles */
-
-body::before {
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-
-  opacity: 0.72;
-
-  background-image:
-    radial-gradient(circle, rgb(12 90 47 / 24%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(55 105 35 / 22%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(10 100 76 / 20%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(80 105 35 / 17%) 0 34%, transparent 70%);
-
-  background-size:
-    260px 260px,
-    190px 190px,
-    145px 145px,
-    110px 110px;
-
-  background-position:
-    -90px 8%,
-    86% 18%,
-    72% 82%,
-    12% 88%;
-
-  animation: ambient-circles-drift 22s ease-in-out infinite alternate;
-}
-
-/* Smaller accent circles */
-
-body::after {
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-
-  opacity: 0.68;
-
-  background-image:
-    radial-gradient(circle, rgb(8 75 39 / 23%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(85 115 45 / 20%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(12 90 65 / 19%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(70 100 35 / 18%) 0 35%, transparent 72%);
-
-  background-size:
-    125px 125px,
-    85px 85px,
-    170px 170px,
-    65px 65px;
-
-  background-position:
-    92% 54%,
-    38% 16%,
-    4% 65%,
-    57% 92%;
-
-  animation: ambient-circles-float 16s ease-in-out infinite alternate;
-}
-
-/* Animations */
-
-@keyframes ambient-circles-drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(14px, -20px, 0) scale(1.025);
-  }
-
-  100% {
-    transform: translate3d(-12px, 15px, 0) scale(0.98);
-  }
-}
-
-@keyframes ambient-circles-float {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-
-  50% {
-    transform: translate3d(-18px, 16px, 0) rotate(3deg);
-  }
-
-  100% {
-    transform: translate3d(12px, -18px, 0) rotate(-3deg);
-  }
-}
-
-/* Mobile circles */
-
-@media (max-width: 640px) {
-  body::before,
-  body::after {
-    opacity: 0.45;
-
-    background-size:
-      150px 150px,
-      110px 110px,
-      90px 90px,
-      70px 70px;
-  }
-}
-
-/* Reduced motion */
-
-@media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
+  .ambient-circle {
     animation: none !important;
+    will-change: auto;
   }
-}
-
-/* Dark mode ambient circles */
-
-.dark body::before {
-  opacity: 0.55;
-
-  background-image:
-    radial-gradient(circle, rgb(10 100 55 / 22%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(75 110 45 / 18%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(10 100 80 / 18%) 0 34%, transparent 70%),
-    radial-gradient(circle, rgb(90 110 40 / 13%) 0 34%, transparent 70%);
-}
-
-.dark body::after {
-  opacity: 0.48;
-
-  background-image:
-    radial-gradient(circle, rgb(8 80 45 / 20%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(80 110 50 / 16%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(10 90 70 / 15%) 0 35%, transparent 72%),
-    radial-gradient(circle, rgb(85 105 40 / 12%) 0 35%, transparent 72%);
 }
 
 /* =========================================================
