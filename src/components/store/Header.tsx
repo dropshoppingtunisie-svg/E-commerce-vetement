@@ -31,16 +31,41 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-function Logo({ className }: { className?: string }) {
+function Logo({ className, size = "md" }: { className?: string; size?: "md" | "sm" }) {
+  const scale = size === "sm" ? "text-[1.6rem]" : "text-[2.1rem] sm:text-[2.4rem] lg:text-[2.6rem]";
+
   return (
-    <Link to="/" className={className}>
-      <span className="font-display text-2xl font-semibold tracking-tight">
-        Bu<span className="text-accent-strong">fanda</span>
+    <Link
+      to="/"
+      className={`group inline-flex items-baseline gap-[2px] font-display leading-none tracking-tight ${scale} ${className ?? ""}`}
+      aria-label="Bufanda — Accueil"
+    >
+      <span
+        className="relative font-bold text-foreground transition-colors duration-300 group-hover:text-primary"
+        style={{ letterSpacing: "-0.045em" }}
+      >
+        Bu
+        {/* petit trait décoratif sous "Bu" */}
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-1 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full bg-accent-strong transition-transform duration-500 ease-out group-hover:scale-x-100"
+        />
+      </span>
+
+      <span
+        className="relative font-bold italic text-accent-strong"
+        style={{ letterSpacing: "-0.055em" }}
+      >
+        fanda
+        {/* point ocre après le mot */}
+        <span
+          aria-hidden="true"
+          className="ml-[1px] inline-block h-[0.32em] w-[0.32em] rounded-full bg-ocre align-baseline"
+        />
       </span>
     </Link>
   );
 }
-
 export function Header() {
   const { count, setCartOpen, wishlist } = useStore();
   const { user, profile, isCustomer, openAuth } = useAuth();

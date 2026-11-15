@@ -307,7 +307,7 @@ function HomePage() {
         </section>
       ) : (
         <section className="container-page pt-5 sm:pt-8">
-          <div className="relative overflow-hidden bg-[#e9e3da] px-6 py-16 sm:px-12 sm:py-24 lg:px-16">
+          <div className="relative overflow-hidden bg-[#dcebc5] px-6 py-16 sm:px-12 sm:py-24 lg:px-16">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/30 blur-3xl" />
 
             <div className="relative max-w-2xl">
