@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Facebook, Heart, Instagram, Menu, Phone, Search, ShoppingCart, User } from "lucide-react";
+import { Facebook, Heart, Instagram, Menu, Search, ShoppingCart, User } from "lucide-react";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +14,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MegaMenu } from "./MegaMenu";
 import AnnouncementBar from "@/components/ui/AnnouncementBar";
+
+// ================================================================
+// ICÔNES RÉSEAUX SOCIAUX (custom)
+// ================================================================
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -31,8 +35,21 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-function Logo({ className, size = "md" }: { className?: string; size?: "md" | "sm" }) {
-  const scale = size === "sm" ? "text-[1.6rem]" : "text-[2.1rem] sm:text-[2.4rem] lg:text-[2.6rem]";
+// ================================================================
+// LOGO BUFANDA — grand, gras, design
+// ================================================================
+
+function Logo({
+  className,
+  size = "md",
+}: {
+  className?: string;
+  size?: "md" | "sm";
+}) {
+  const scale =
+    size === "sm"
+      ? "text-[1.65rem]"
+      : "text-[2.1rem] sm:text-[2.4rem] lg:text-[2.6rem]";
 
   return (
     <Link
@@ -40,24 +57,24 @@ function Logo({ className, size = "md" }: { className?: string; size?: "md" | "s
       className={`group inline-flex items-baseline gap-[2px] font-display leading-none tracking-tight ${scale} ${className ?? ""}`}
       aria-label="Bufanda — Accueil"
     >
+      {/* "Bu" — gras, noir, trait décoratif au hover */}
       <span
         className="relative font-bold text-foreground transition-colors duration-300 group-hover:text-primary"
         style={{ letterSpacing: "-0.045em" }}
       >
         Bu
-        {/* petit trait décoratif sous "Bu" */}
         <span
           aria-hidden="true"
           className="absolute -bottom-1 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full bg-accent-strong transition-transform duration-500 ease-out group-hover:scale-x-100"
         />
       </span>
 
+      {/* "fanda" — italique vert sauge + point ocre */}
       <span
         className="relative font-bold italic text-accent-strong"
         style={{ letterSpacing: "-0.055em" }}
       >
         fanda
-        {/* point ocre après le mot */}
         <span
           aria-hidden="true"
           className="ml-[1px] inline-block h-[0.32em] w-[0.32em] rounded-full bg-ocre align-baseline"
@@ -66,6 +83,91 @@ function Logo({ className, size = "md" }: { className?: string; size?: "md" | "s
     </Link>
   );
 }
+
+// ================================================================
+// BLOC ICÔNES (user + wishlist + cart) — réutilisé desktop/mobile
+// ================================================================
+
+function HeaderActions({
+  isCustomer,
+  user,
+  profile,
+  openAuth,
+  navigate,
+  wishlist,
+  count,
+  setCartOpen,
+}: {
+  isCustomer: boolean;
+  user: { email?: string | null } | null;
+  profile: { first_name?: string | null; role?: string | null } | null;
+  openAuth: (mode: "signin") => void;
+  navigate: ReturnType<typeof useNavigate>;
+  wishlist: unknown[];
+  count: number;
+  setCartOpen: (open: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {/* Compte */}
+      {isCustomer ? (
+        <div className="flex items-center gap-2">
+          <span className="hidden text-sm font-medium sm:block">
+            {profile?.first_name ?? user?.email}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate({ to: "/compte" })}
+            aria-label="Mon compte"
+          >
+            <User className="h-5 w-5" />
+          </Button>
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Se connecter"
+          onClick={() => openAuth("signin")}
+        >
+          <User className="h-5 w-5" />
+        </Button>
+      )}
+
+      {/* Favoris */}
+      <Button variant="ghost" size="icon" asChild aria-label="Mes favoris" className="relative">
+        <Link to="/favoris">
+          <Heart className="h-5 w-5" />
+          {wishlist.length > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-foreground px-1 text-[10px] font-bold text-background">
+              {wishlist.length}
+            </span>
+          )}
+        </Link>
+      </Button>
+
+      {/* Panier */}
+      <button
+        onClick={() => setCartOpen(true)}
+        aria-label="Ouvrir le panier"
+        className="relative grid h-10 w-10 place-items-center rounded-md transition-colors hover:bg-accent hover:text-accent-strong"
+      >
+        <ShoppingCart className="h-5 w-5" />
+        {count > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent-strong px-1 text-[10px] font-bold text-accent-strong-foreground">
+            {count}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ================================================================
+// HEADER
+// ================================================================
+
 export function Header() {
   const { count, setCartOpen, wishlist } = useStore();
   const { user, profile, isCustomer, openAuth } = useAuth();
@@ -77,6 +179,7 @@ export function Header() {
   const [tree, setTree] = useState<CategoryNode[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
+  // Chargement du catalogue (catégories + produits actifs)
   useEffect(() => {
     let mounted = true;
     Promise.all([fetchCategories(), fetchActiveProducts()])
@@ -91,20 +194,26 @@ export function Header() {
     };
   }, []);
 
+  // Reset de la recherche au changement d'utilisateur
   useEffect(() => {
     setQuery("");
     setSearchReady(false);
   }, [user?.id]);
 
+  // Résultats de recherche
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return products
-      .filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q))
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q)
+      )
       .slice(0, 6);
   }, [products, query]);
 
-  // Seuls les reseaux renseignes dans /admin/parametres sont affiches.
+  // Réseaux sociaux (depuis les paramètres admin)
   const socialLinks = useMemo(() => {
     const all: {
       key: string;
@@ -117,33 +226,31 @@ export function Header() {
       { key: "tiktok", href: settings?.tiktok_url, label: "TikTok", Icon: TikTokIcon },
       { key: "whatsapp", href: settings?.whatsapp_url, label: "WhatsApp", Icon: WhatsAppIcon },
     ];
-    // flatMap plutot que filter : il retire les liens vides ET restreint le
-    // type de `href` a string, ce qu'un filter ne fait pas.
-    return all.flatMap((link) => (link.href?.trim() ? [{ ...link, href: link.href.trim() }] : []));
+    return all.flatMap((link) =>
+      link.href?.trim() ? [{ ...link, href: link.href.trim() }] : []
+    );
   }, [settings]);
 
+  // ==============================================================
+  // RENDER
+  // ==============================================================
+
   return (
-    
-    <header className="sticky top-0 z-50 bg-card">
-     <AnnouncementBar />
+    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/80">
+      <AnnouncementBar />
 
-      <div className="border-b border-surface lg:border-b-0">
-        <div className="container-page grid h-[5.5rem] grid-cols-[1fr_auto_1fr] items-center gap-4 sm:h-24 lg:grid-cols-[auto_1fr_auto]">
-          <div className="flex items-center gap-3">
-            <button
-              className="text-foreground lg:hidden"
-              aria-label="Ouvrir le menu"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-
-            <Logo className="hidden items-center gap-2 lg:flex" />
+      <div className="border-b border-surface shadow-[0_1px_0_0_rgba(90,105,65,0.06)] lg:border-b-0">
+        {/* ====================================================== */}
+        {/* LAYOUT DESKTOP (lg+)                                   */}
+        {/* ====================================================== */}
+        <div className="container-page hidden h-24 grid-cols-[auto_1fr_auto] items-center gap-4 lg:grid">
+          {/* Colonne 1 : Logo desktop */}
+          <div className="flex items-center">
+            <Logo size="md" />
           </div>
 
-          <Logo className="flex justify-center lg:hidden" />
-
-          <div className="relative mx-auto hidden w-full max-w-xl lg:block">
+          {/* Colonne 2 : Recherche */}
+          <div className="relative mx-auto w-full max-w-xl pr-6">
             <Input
               name="search"
               autoComplete="off"
@@ -159,6 +266,7 @@ export function Header() {
             <span className="pointer-events-none absolute right-0 top-0 grid h-11 w-12 place-items-center rounded-r-md bg-accent-strong text-accent-strong-foreground">
               <Search className="h-4 w-4" />
             </span>
+
             {query.trim().length > 0 && (
               <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-card shadow-pop">
                 {results.length === 0 ? (
@@ -172,14 +280,25 @@ export function Header() {
                         <button
                           onClick={() => {
                             setQuery("");
-                            navigate({ to: "/produit/$slug", params: { slug: p.slug } });
+                            navigate({
+                              to: "/produit/$slug",
+                              params: { slug: p.slug },
+                            });
                           }}
                           className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface"
                         >
-                          <img src={p.images[0]?.url} alt="" className="h-10 w-10 rounded object-cover" />
+                          <img
+                            src={p.images[0]?.url}
+                            alt=""
+                            className="h-10 w-10 rounded object-cover"
+                          />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium">{p.name}</span>
-                            <span className="block text-xs text-muted-foreground">{p.brand}</span>
+                            <span className="block truncate text-sm font-medium">
+                              {p.name}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {p.brand}
+                            </span>
                           </span>
                           <span className="text-sm font-bold text-accent-strong">
                             {formatPrice(p.price)}
@@ -193,61 +312,55 @@ export function Header() {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-1">
-            {/*
-              On se base sur isCustomer (session + rôle "customer"), jamais
-              sur `user` seul : la session Supabase est partagée avec le
-              back-office admin (même navigateur, même client). Un admin
-              connecté sur /admin ne doit jamais apparaître comme un client
-              connecté ici, ni accéder à /compte via ce bouton.
-            */}
-            {isCustomer ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden text-sm font-medium sm:block">{profile?.first_name ?? user.email}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate({ to: "/compte" })}
-                  aria-label="Mon compte"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Se connecter"
-                onClick={() => openAuth("signin")}
-              >
-                <User className="h-5 w-5" />
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" asChild aria-label="Mes favoris" className="relative">
-              <Link to="/favoris">
-                <Heart className="h-5 w-5" />
-                {wishlist.length > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-foreground px-1 text-[10px] font-bold text-background">
-                    {wishlist.length}
-                  </span>
-                )}
-              </Link>
-            </Button>
-            <button
-              onClick={() => setCartOpen(true)}
-              aria-label="Ouvrir le panier"
-              className="relative grid h-10 w-10 place-items-center rounded-md transition-colors hover:bg-accent hover:text-accent-strong"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent-strong px-1 text-[10px] font-bold text-accent-strong-foreground">
-                  {count}
-                </span>
-              )}
-            </button>
-          </div>
+          {/* Colonne 3 : Icônes */}
+          <HeaderActions
+            isCustomer={isCustomer}
+            user={user}
+            profile={profile}
+            openAuth={openAuth}
+            navigate={navigate}
+            wishlist={wishlist}
+            count={count}
+            setCartOpen={setCartOpen}
+          />
         </div>
 
+        {/* ====================================================== */}
+        {/* LAYOUT MOBILE (< lg) — UN SEUL LOGO                    */}
+        {/* ====================================================== */}
+        <div className="container-page grid h-[5.5rem] grid-cols-[1fr_auto_1fr] items-center gap-3 lg:hidden">
+          {/* Colonne 1 : Menu burger */}
+          <div className="flex items-center">
+            <button
+              className="text-foreground"
+              aria-label="Ouvrir le menu"
+              onClick={() => setMobileOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Colonne 2 : Logo (une seule fois) */}
+          <div className="flex justify-center">
+            <Logo size="sm" />
+          </div>
+
+          {/* Colonne 3 : Icônes */}
+          <HeaderActions
+            isCustomer={isCustomer}
+            user={user}
+            profile={profile}
+            openAuth={openAuth}
+            navigate={navigate}
+            wishlist={wishlist}
+            count={count}
+            setCartOpen={setCartOpen}
+          />
+        </div>
+
+        {/* ====================================================== */}
+        {/* RECHERCHE MOBILE                                       */}
+        {/* ====================================================== */}
         <div className="container-page pb-3 lg:hidden">
           <div className="relative">
             <Input
@@ -265,21 +378,31 @@ export function Header() {
             <span className="pointer-events-none absolute right-0 top-0 grid h-11 w-12 place-items-center rounded-r-md bg-accent-strong text-accent-strong-foreground">
               <Search className="h-4 w-4" />
             </span>
+
             {query.trim().length > 0 && (
               <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-card shadow-pop">
                 {results.length === 0 ? (
-                  <p className="px-4 py-6 text-center text-sm text-muted-foreground">Aucun résultat</p>
+                  <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    Aucun résultat
+                  </p>
                 ) : (
                   results.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => {
                         setQuery("");
-                        navigate({ to: "/produit/$slug", params: { slug: p.slug } });
+                        navigate({
+                          to: "/produit/$slug",
+                          params: { slug: p.slug },
+                        });
                       }}
                       className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface"
                     >
-                      <img src={p.images[0]?.url} alt="" className="h-9 w-9 rounded object-cover" />
+                      <img
+                        src={p.images[0]?.url}
+                        alt=""
+                        className="h-9 w-9 rounded object-cover"
+                      />
                       <span className="truncate text-sm">{p.name}</span>
                     </button>
                   ))
@@ -290,13 +413,18 @@ export function Header() {
         </div>
       </div>
 
+      {/* --------------------------- MEGA MENU --------------------------- */}
       <MegaMenu />
 
+      {/* ------------------------ MENU MOBILE (SHEET) -------------------- */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-80 p-0">
           <SheetHeader className="border-b border-border px-5 py-4">
-            <SheetTitle>Catégories</SheetTitle>
+            <SheetTitle>
+              <Logo size="sm" />
+            </SheetTitle>
           </SheetHeader>
+
           <div className="overflow-y-auto px-3 py-2">
             <Accordion type="multiple">
               {tree.map((cat: CategoryNode) => {
@@ -304,7 +432,9 @@ export function Header() {
 
                 return (
                   <AccordionItem key={cat.id} value={cat.id}>
-                    <AccordionTrigger className="text-sm font-semibold">{cat.name}</AccordionTrigger>
+                    <AccordionTrigger className="text-sm font-semibold">
+                      {cat.name}
+                    </AccordionTrigger>
                     <AccordionContent>
                       <ul className="space-y-1 pl-2">
                         <li>
@@ -319,7 +449,8 @@ export function Header() {
                         </li>
                         {subCategories.map((sub) => {
                           const typedSub = sub as CategoryNode;
-                          const leafCategories: CategoryNode[] = typedSub.children ?? [];
+                          const leafCategories: CategoryNode[] =
+                            typedSub.children ?? [];
 
                           return (
                             <li key={typedSub.id}>
@@ -357,22 +488,62 @@ export function Header() {
                 );
               })}
             </Accordion>
+
             <div className="mt-4 space-y-1 border-t border-border pt-4">
-              <Link to="/promotions" onClick={() => setMobileOpen(false)} className="block py-1.5 text-sm font-semibold text-accent-strong">
+              <Link
+                to="/promotions"
+                onClick={() => setMobileOpen(false)}
+                className="block py-1.5 text-sm font-semibold text-accent-strong"
+              >
                 Promotions
               </Link>
-              <Link to="/compte" onClick={() => setMobileOpen(false)} className="block py-1.5 text-sm">
+              <Link
+                to="/compte"
+                onClick={() => setMobileOpen(false)}
+                className="block py-1.5 text-sm"
+              >
                 Mon compte
               </Link>
               {profile?.role === "admin" && (
-                <Link to="/admin/parametres" onClick={() => setMobileOpen(false)} className="block py-1.5 text-sm">
+                <Link
+                  to="/admin/parametres"
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-1.5 text-sm"
+                >
                   Paramètres
                 </Link>
               )}
-              <Link to="/favoris" onClick={() => setMobileOpen(false)} className="block py-1.5 text-sm">
+              <Link
+                to="/favoris"
+                onClick={() => setMobileOpen(false)}
+                className="block py-1.5 text-sm"
+              >
                 Mes favoris
               </Link>
             </div>
+
+            {/* Réseaux sociaux en bas du menu mobile */}
+            {socialLinks.length > 0 && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Suivez-nous
+                </p>
+                <div className="flex items-center gap-3">
+                  {socialLinks.map(({ key, href, label, Icon }) => (
+                    <a
+                      key={key}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent-strong hover:text-accent-strong"
+                    >
+                      <Icon className="h-4 w-4" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
