@@ -1,4 +1,3 @@
-
 import {
   createFileRoute,
   Link,
@@ -424,8 +423,8 @@ function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Chargement…</p>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-gray-500">Chargement…</p>
       </div>
     );
   }
@@ -437,8 +436,8 @@ function AdminLayout() {
 
   if (!user || !profile || profile.role !== "admin") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Redirection…</p>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-gray-500">Redirection…</p>
       </div>
     );
   }
@@ -448,22 +447,25 @@ function AdminLayout() {
   // ==========================================
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    // 1. FOND GÉNÉRAL BLANC
+    <div className="flex min-h-screen bg-white">
 
       {/* SIDEBAR */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-border bg-card transition-transform lg:translate-x-0",
+          // 2. BORDURE VERTE CLAIRE + FOND BLANC
+          "fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-green-100 bg-white transition-transform lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="relative flex h-16 items-center gap-2 border-b border-border px-5">
-          <span className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-extrabold">
-            Bu<span className="text-accent-strong">fanda</span>
+        <div className="relative flex h-16 items-center gap-2 border-b border-green-100 px-5">
+          {/* LOGO */}
+          <span className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-extrabold text-[#123b25]">
+            <span className="text-green-700">Bufanda</span>
           </span>
 
           <button
-            className="ml-auto lg:hidden"
+            className="ml-auto text-gray-500 hover:text-gray-900 lg:hidden"
             onClick={() => setOpen(false)}
             aria-label="Fermer"
           >
@@ -483,10 +485,10 @@ function AdminLayout() {
                 to={to}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-accent-strong/10 text-accent-strong"
-                    : "text-muted-foreground hover:bg-surface hover:text-foreground"
+                    ? "bg-green-50 text-green-800"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -494,7 +496,7 @@ function AdminLayout() {
                 {label}
 
                 {(navBadges[to] ?? 0) > 0 && (
-                  <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent-strong px-1 text-[11px] font-bold text-accent-strong-foreground">
+                  <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-green-600 px-1.5 text-[11px] font-bold text-white shadow-sm">
                     {navBadges[to]}
                   </span>
                 )}
@@ -504,7 +506,11 @@ function AdminLayout() {
         </nav>
 
         <div className="p-3">
-          <Button variant="outline" className="w-full" asChild>
+          <Button
+            variant="outline"
+            className="w-full border-green-200 text-green-800 hover:bg-green-50 hover:text-green-900"
+            asChild
+          >
             <Link to="/">
               <Store className="h-4 w-4" />
               Voir la boutique
@@ -516,7 +522,7 @@ function AdminLayout() {
       {/* OVERLAY MOBILE */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-gray-900/40 backdrop-blur-sm lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
@@ -525,10 +531,10 @@ function AdminLayout() {
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
 
         {/* HEADER */}
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-card px-4 lg:px-8">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-green-100 bg-white/95 px-4 backdrop-blur-sm lg:px-8">
 
           <button
-            className="lg:hidden"
+            className="text-gray-500 hover:text-gray-900 lg:hidden"
             onClick={() => setOpen(true)}
             aria-label="Ouvrir le menu"
           >
@@ -541,12 +547,12 @@ function AdminLayout() {
             <button
               aria-label="Notifications"
               onClick={handleNotificationsClick}
-              className="relative rounded-md p-2 text-muted-foreground hover:bg-surface"
+              className="relative rounded-full p-2 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-700"
             >
               <Bell className="h-5 w-5" />
 
               {unreadNotifications > 0 && (
-                <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent-strong px-0.5 text-[10px] font-bold text-accent-strong-foreground">
+                <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-green-600 px-0.5 text-[10px] font-bold text-white ring-2 ring-white">
                   {unreadNotifications}
                 </span>
               )}
@@ -559,33 +565,33 @@ function AdminLayout() {
                 onClick={() =>
                   setUserMenuOpen((s) => !s)
                 }
-                className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-surface"
+                className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 text-sm transition-colors hover:bg-green-50"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-strong text-xs font-semibold text-accent-strong-foreground">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-800">
                   {user?.email?.charAt(0).toUpperCase() ?? "U"}
                 </span>
 
-                <span className="hidden sm:block text-sm">
+                <span className="hidden sm:block text-sm font-medium text-gray-700">
                   {displayName}
                 </span>
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg">
+                <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-green-100 bg-white shadow-lg">
 
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-surface"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50"
                     onClick={() => {
                       setUserMenuOpen(false);
                       navigate({ to: "/admin/parametres" });
                     }}
                   >
-                    <User className="h-4 w-4" />
+                    <User className="h-4 w-4 text-gray-400" />
                     Paramètres
                   </button>
 
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-surface"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                     onClick={async () => {
                       setUserMenuOpen(false);
 
@@ -610,7 +616,7 @@ function AdminLayout() {
         </header>
 
         {/* PAGE */}
-        <main className="flex-1 overflow-auto p-4 lg:p-8">
+        <main className="flex-1 bg-[#fcfbf9] p-4 lg:p-8">
           <Outlet />
         </main>
       </div>
