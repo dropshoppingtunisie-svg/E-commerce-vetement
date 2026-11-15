@@ -128,7 +128,7 @@ export function Header() {
      <AnnouncementBar />
 
       <div className="border-b border-surface lg:border-b-0">
-        <div className="container-page grid h-20 grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid-cols-[auto_1fr_auto]">
+        <div className="container-page grid h-[5.5rem] grid-cols-[1fr_auto_1fr] items-center gap-4 sm:h-24 lg:grid-cols-[auto_1fr_auto]">
           <div className="flex items-center gap-3">
             <button
               className="text-foreground lg:hidden"
