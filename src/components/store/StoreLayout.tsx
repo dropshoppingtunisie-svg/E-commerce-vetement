@@ -38,7 +38,8 @@ export function StoreLayout({ children }: { children: ReactNode }) {
   const isHomePage = router.location.pathname === "/";
 
   return (
-    <div className="store-layout relative isolate flex min-h-screen flex-col bg-[#fcfbf9]">
+    // Le fond général passe de #fcfbf9 à blanc pur pour matcher la fin de page
+    <div className="store-layout relative isolate flex min-h-screen flex-col bg-white">
       <AmbientCircles />
       
       {/* 1. L'ANNONCE TOUT EN HAUT */}
@@ -50,8 +51,8 @@ export function StoreLayout({ children }: { children: ReactNode }) {
       {/* 3. LE HEADER (Menu, recherche, icônes) */}
       <Header />
       
-      {/* 4. LE CONTENU DE LA PAGE */}
-      <main className="relative z-10 flex-1">{children}</main>
+      {/* 4. LE CONTENU DE LA PAGE - On ajoute bg-white ici pour être sûr */}
+      <main className="relative z-10 flex-1 bg-white">{children}</main>
       
       {/* 5. LE PIED DE PAGE */}
       <Footer />

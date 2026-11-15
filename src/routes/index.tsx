@@ -175,7 +175,6 @@ function HomePage() {
                   Découvrir
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </span>
-                {/* Effet de fond au survol */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#f0ede3]/50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
               </Link>
             ))}
@@ -183,7 +182,7 @@ function HomePage() {
         </section>
       )}
 
-      {/* 4. PROMOTIONS (Section beige avec un titre élégant) */}
+      {/* 4. PROMOTIONS (Section beige) */}
       {(loading || promos.length > 0) && (
         <section className="relative bg-[#ecdcc6] py-16 sm:py-24">
           <div className="container-page">
@@ -236,9 +235,9 @@ function HomePage() {
         </section>
       )}
 
-      {/* 6. TOUS LES PRODUITS (Fond blanc, typographie aérée) */}
+      {/* 6. TOUS LES PRODUITS (Fond blanc) */}
       {(loading || products.length > 0) && (
-        <section id="all-products" className="relative scroll-mt-24 bg-white py-16 sm:py-24">
+        <section id="all-products" className="relative scroll-mt-24 bg-white py-16 sm:py-24 pb-32">
           <div className="container-page">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
               <div>
