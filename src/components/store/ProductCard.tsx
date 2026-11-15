@@ -33,13 +33,21 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card",
+        // Carte neutre chaude qui s'harmonise avec tous les fonds pastel
+        "group relative flex flex-col overflow-hidden rounded-2xl",
+        "border border-[#e3dccb] bg-[#fdfbf7]",
+        "dark:border-[#2a3830] dark:bg-[#1e2a24]",
+        // Ombre douce + élévation au survol
+        "shadow-[0_2px_10px_-2px_rgba(60,50,30,0.08),0_8px_24px_-8px_rgba(60,50,30,0.12)]",
         "transition-all duration-300 ease-out",
-        "hover:-translate-y-1 hover:border-border hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.28)]",
+        "hover:-translate-y-1 hover:border-[#c9bfa3]",
+        "hover:shadow-[0_18px_40px_-18px_rgba(60,50,30,0.28)]",
+        "dark:hover:border-[#3d4f44]",
+        "dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.5)]",
         outOfStock && "opacity-95",
       )}
     >
-      <div className="relative overflow-hidden bg-surface">
+      <div className="relative overflow-hidden bg-[#f0ede3] dark:bg-[#26332c]">
         {/* Badges */}
         <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
           {isOnSale(product) && (
@@ -85,7 +93,6 @@ export function ProductCard({ product }: { product: Product }) {
               className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
             />
           )}
-          {/* Dégradé subtil en bas pour lisibilité du prix au survol */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         </Link>
 
@@ -96,8 +103,9 @@ export function ProductCard({ product }: { product: Product }) {
             aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
             onClick={() => toggleWishlist(product.id)}
             className={cn(
-              "grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-card/95 backdrop-blur",
-              "text-foreground shadow-sm transition-all duration-300",
+              "grid h-9 w-9 place-items-center rounded-full border",
+              "border-[#e3dccb] bg-[#fdfbf7]/95 dark:border-[#2a3830] dark:bg-[#1e2a24]/95",
+              "text-foreground shadow-sm backdrop-blur transition-all duration-300",
               "hover:scale-105 hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50",
               liked && "border-accent-strong bg-accent-strong text-accent-strong-foreground",
@@ -110,8 +118,9 @@ export function ProductCard({ product }: { product: Product }) {
             params={{ slug: product.slug }}
             aria-label="Voir le produit"
             className={cn(
-              "grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-card/95 backdrop-blur",
-              "text-foreground shadow-sm",
+              "grid h-9 w-9 place-items-center rounded-full border",
+              "border-[#e3dccb] bg-[#fdfbf7]/95 dark:border-[#2a3830] dark:bg-[#1e2a24]/95",
+              "text-foreground shadow-sm backdrop-blur",
               "translate-x-3 opacity-0 transition-all duration-300",
               "hover:border-accent-strong hover:bg-accent-strong hover:text-accent-strong-foreground",
               "group-hover:translate-x-0 group-hover:opacity-100",
@@ -196,13 +205,13 @@ export function ProductCard({ product }: { product: Product }) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-      <div className="aspect-square animate-pulse bg-surface" />
+    <div className="overflow-hidden rounded-2xl border border-[#e3dccb] bg-[#fdfbf7] dark:border-[#2a3830] dark:bg-[#1e2a24]">
+      <div className="aspect-square animate-pulse bg-[#f0ede3] dark:bg-[#26332c]" />
       <div className="space-y-3 p-4">
-        <div className="h-3 w-16 animate-pulse rounded bg-surface" />
-        <div className="h-4 w-full animate-pulse rounded bg-surface" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-surface" />
-        <div className="h-10 w-full animate-pulse rounded-lg bg-surface" />
+        <div className="h-3 w-16 animate-pulse rounded bg-[#ebe6d8] dark:bg-[#2f3d35]" />
+        <div className="h-4 w-full animate-pulse rounded bg-[#ebe6d8] dark:bg-[#2f3d35]" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-[#ebe6d8] dark:bg-[#2f3d35]" />
+        <div className="h-10 w-full animate-pulse rounded-lg bg-[#ebe6d8] dark:bg-[#2f3d35]" />
       </div>
     </div>
   );

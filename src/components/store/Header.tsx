@@ -7,17 +7,13 @@ import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { categoryTreeWithProducts } from "@/data/categories";
 import { fetchActiveProducts, fetchCategories } from "@/lib/catalog";
 import { formatPrice } from "@/lib/placeholder";
+import { cn } from "@/lib/utils";
 import type { CategoryNode, Product } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MegaMenu } from "./MegaMenu";
-import AnnouncementBar from "@/components/ui/AnnouncementBar";
-
-// ================================================================
-// ICÔNES RÉSEAUX SOCIAUX (custom)
-// ================================================================
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -35,68 +31,8 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-// ================================================================
-// LOGO BUFANDA — grand, gras, design
-// ================================================================
-
-function Logo({
-  className,
-  size = "md",
-}: {
-  className?: string;
-  size?: "md" | "sm";
-}) {
-  const scale =
-    size === "sm"
-      ? "text-[1.65rem]"
-      : "text-[2.1rem] sm:text-[2.4rem] lg:text-[2.6rem]";
-
-  return (
-    <Link
-      to="/"
-      className={`group inline-flex items-baseline gap-[2px] font-display leading-none tracking-tight ${scale} ${className ?? ""}`}
-      aria-label="Bufanda — Accueil"
-    >
-      {/* "Bu" — gras, noir, trait décoratif au hover */}
-      <span
-        className="relative font-bold text-foreground transition-colors duration-300 group-hover:text-primary"
-        style={{ letterSpacing: "-0.045em" }}
-      >
-        Bu
-        <span
-          aria-hidden="true"
-          className="absolute -bottom-1 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full bg-accent-strong transition-transform duration-500 ease-out group-hover:scale-x-100"
-        />
-      </span>
-
-      {/* "fanda" — italique vert sauge + point ocre */}
-      <span
-        className="relative font-bold italic text-accent-strong"
-        style={{ letterSpacing: "-0.055em" }}
-      >
-        fanda
-        <span
-          aria-hidden="true"
-          className="ml-[1px] inline-block h-[0.32em] w-[0.32em] rounded-full bg-ocre align-baseline"
-        />
-      </span>
-    </Link>
-  );
-}
-
-// ================================================================
-// BLOC ICÔNES (user + wishlist + cart) — réutilisé desktop/mobile
-// ================================================================
-
 function HeaderActions({
-  isCustomer,
-  user,
-  profile,
-  openAuth,
-  navigate,
-  wishlist,
-  count,
-  setCartOpen,
+  isCustomer, user, profile, openAuth, navigate, wishlist, count, setCartOpen,
 }: {
   isCustomer: boolean;
   user: { email?: string | null } | null;
@@ -109,34 +45,22 @@ function HeaderActions({
 }) {
   return (
     <div className="flex items-center justify-end gap-1">
-      {/* Compte */}
       {isCustomer ? (
         <div className="flex items-center gap-2">
-          <span className="hidden text-sm font-medium sm:block">
+          <span className="hidden text-sm font-medium sm:block text-foreground/80">
             {profile?.first_name ?? user?.email}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate({ to: "/compte" })}
-            aria-label="Mon compte"
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/compte" })} aria-label="Mon compte" className="hover:bg-black/5 hover:text-accent-strong">
             <User className="h-5 w-5" />
           </Button>
         </div>
       ) : (
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Se connecter"
-          onClick={() => openAuth("signin")}
-        >
+        <Button variant="ghost" size="icon" aria-label="Se connecter" onClick={() => openAuth("signin")} className="hover:bg-black/5 hover:text-accent-strong">
           <User className="h-5 w-5" />
         </Button>
       )}
 
-      {/* Favoris */}
-      <Button variant="ghost" size="icon" asChild aria-label="Mes favoris" className="relative">
+      <Button variant="ghost" size="icon" asChild aria-label="Mes favoris" className="relative hover:bg-black/5 hover:text-accent-strong">
         <Link to="/favoris">
           <Heart className="h-5 w-5" />
           {wishlist.length > 0 && (
@@ -147,11 +71,10 @@ function HeaderActions({
         </Link>
       </Button>
 
-      {/* Panier */}
       <button
         onClick={() => setCartOpen(true)}
         aria-label="Ouvrir le panier"
-        className="relative grid h-10 w-10 place-items-center rounded-md transition-colors hover:bg-accent hover:text-accent-strong"
+        className="relative grid h-10 w-10 place-items-center rounded-md transition-colors hover:bg-black/5 hover:text-accent-strong"
       >
         <ShoppingCart className="h-5 w-5" />
         {count > 0 && (
@@ -164,10 +87,6 @@ function HeaderActions({
   );
 }
 
-// ================================================================
-// HEADER
-// ================================================================
-
 export function Header() {
   const { count, setCartOpen, wishlist } = useStore();
   const { user, profile, isCustomer, openAuth } = useAuth();
@@ -179,7 +98,6 @@ export function Header() {
   const [tree, setTree] = useState<CategoryNode[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Chargement du catalogue (catégories + produits actifs)
   useEffect(() => {
     let mounted = true;
     Promise.all([fetchCategories(), fetchActiveProducts()])
@@ -189,68 +107,50 @@ export function Header() {
         setTree(categoryTreeWithProducts(categories, activeProducts));
       })
       .catch((err) => console.error("load header catalog", err));
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  // Reset de la recherche au changement d'utilisateur
   useEffect(() => {
     setQuery("");
     setSearchReady(false);
   }, [user?.id]);
 
-  // Résultats de recherche
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return products
-      .filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q)
-      )
+      .filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q))
       .slice(0, 6);
   }, [products, query]);
 
-  // Réseaux sociaux (depuis les paramètres admin)
   const socialLinks = useMemo(() => {
     const all: {
-      key: string;
-      href: string | null | undefined;
-      label: string;
-      Icon: ComponentType<{ className?: string }>;
+      key: string; href: string | null | undefined; label: string; Icon: ComponentType<{ className?: string }>;
     }[] = [
       { key: "instagram", href: settings?.instagram_url, label: "Instagram", Icon: Instagram },
       { key: "facebook", href: settings?.facebook_url, label: "Facebook", Icon: Facebook },
       { key: "tiktok", href: settings?.tiktok_url, label: "TikTok", Icon: TikTokIcon },
       { key: "whatsapp", href: settings?.whatsapp_url, label: "WhatsApp", Icon: WhatsAppIcon },
     ];
-    return all.flatMap((link) =>
-      link.href?.trim() ? [{ ...link, href: link.href.trim() }] : []
-    );
+    return all.flatMap((link) => link.href?.trim() ? [{ ...link, href: link.href.trim() }] : []);
   }, [settings]);
 
-  // ==============================================================
-  // RENDER
-  // ==============================================================
-
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/80">
-      <AnnouncementBar />
+    // FOND TRANSPARENT (Vert Sauge) avec EFFET DE FLOU
+    <header className="sticky top-0 z-50 bg-[#dcebc5]/85 backdrop-blur-md border-b border-[#c9d6b5]/50 transition-all duration-300">
+      <div className="container-page">
+        {/* DESKTOP */}
+        <div className="hidden h-20 items-center justify-between gap-8 lg:flex">
+          <button 
+            className="text-foreground hover:text-accent-strong transition-colors" 
+            aria-label="Ouvrir le menu" 
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </button>
 
-      <div className="border-b border-surface shadow-[0_1px_0_0_rgba(90,105,65,0.06)] lg:border-b-0">
-        {/* ====================================================== */}
-        {/* LAYOUT DESKTOP (lg+)                                   */}
-        {/* ====================================================== */}
-        <div className="container-page hidden h-24 grid-cols-[auto_1fr_auto] items-center gap-4 lg:grid">
-          {/* Colonne 1 : Logo desktop */}
-          <div className="flex items-center">
-            <Logo size="md" />
-          </div>
-
-          {/* Colonne 2 : Recherche */}
-          <div className="relative mx-auto w-full max-w-xl pr-6">
+          {/* Barre de recherche centrale */}
+          <div className="relative flex-1 max-w-2xl mx-auto">
             <Input
               name="search"
               autoComplete="off"
@@ -259,16 +159,17 @@ export function Header() {
               data-lpignore="true"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un produit, une marque…"
-              className="h-11 rounded-md border-border bg-card pr-14 shadow-none"
+              placeholder="Rechercher une pièce, une marque..."
+              // Fond de la recherche ajusté pour coller au header
+              className="h-11 w-full rounded-full border-transparent bg-white/60 px-5 pr-14 text-sm shadow-sm transition-all focus:bg-white focus:border-white focus:ring-0 placeholder:text-foreground/50"
               aria-label="Rechercher"
             />
-            <span className="pointer-events-none absolute right-0 top-0 grid h-11 w-12 place-items-center rounded-r-md bg-accent-strong text-accent-strong-foreground">
-              <Search className="h-4 w-4" />
+            <span className="pointer-events-none absolute right-1.5 top-1.5 grid h-8 w-8 place-items-center rounded-full bg-foreground text-background transition-colors hover:bg-accent-strong">
+              <Search className="h-3.5 w-3.5" />
             </span>
 
             {query.trim().length > 0 && (
-              <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-card shadow-pop">
+              <div className="absolute inset-x-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
                 {results.length === 0 ? (
                   <p className="px-4 py-6 text-center text-sm text-muted-foreground">
                     Aucun résultat pour « {query} »
@@ -280,29 +181,16 @@ export function Header() {
                         <button
                           onClick={() => {
                             setQuery("");
-                            navigate({
-                              to: "/produit/$slug",
-                              params: { slug: p.slug },
-                            });
+                            navigate({ to: "/produit/$slug", params: { slug: p.slug } });
                           }}
-                          className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface"
+                          className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-gray-50"
                         >
-                          <img
-                            src={p.images[0]?.url}
-                            alt=""
-                            className="h-10 w-10 rounded object-cover"
-                          />
+                          <img src={p.images[0]?.url} alt="" className="h-12 w-12 rounded-lg object-cover" />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium">
-                              {p.name}
-                            </span>
-                            <span className="block text-xs text-muted-foreground">
-                              {p.brand}
-                            </span>
+                            <span className="block truncate font-medium text-sm text-foreground">{p.name}</span>
+                            <span className="block text-xs text-muted-foreground">{p.brand}</span>
                           </span>
-                          <span className="text-sm font-bold text-accent-strong">
-                            {formatPrice(p.price)}
-                          </span>
+                          <span className="font-semibold text-accent-strong">{formatPrice(p.price)}</span>
                         </button>
                       </li>
                     ))}
@@ -312,7 +200,6 @@ export function Header() {
             )}
           </div>
 
-          {/* Colonne 3 : Icônes */}
           <HeaderActions
             isCustomer={isCustomer}
             user={user}
@@ -325,27 +212,14 @@ export function Header() {
           />
         </div>
 
-        {/* ====================================================== */}
-        {/* LAYOUT MOBILE (< lg) — UN SEUL LOGO                    */}
-        {/* ====================================================== */}
-        <div className="container-page grid h-[5.5rem] grid-cols-[1fr_auto_1fr] items-center gap-3 lg:hidden">
-          {/* Colonne 1 : Menu burger */}
+        {/* MOBILE */}
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3 lg:hidden">
           <div className="flex items-center">
-            <button
-              className="text-foreground"
-              aria-label="Ouvrir le menu"
-              onClick={() => setMobileOpen(true)}
-            >
+            <button className="text-foreground" aria-label="Ouvrir le menu" onClick={() => setMobileOpen(true)}>
               <Menu className="h-6 w-6" />
             </button>
           </div>
-
-          {/* Colonne 2 : Logo (une seule fois) */}
-          <div className="flex justify-center">
-            <Logo size="sm" />
-          </div>
-
-          {/* Colonne 3 : Icônes */}
+          <div className="flex justify-center"></div>
           <HeaderActions
             isCustomer={isCustomer}
             user={user}
@@ -358,10 +232,8 @@ export function Header() {
           />
         </div>
 
-        {/* ====================================================== */}
-        {/* RECHERCHE MOBILE                                       */}
-        {/* ====================================================== */}
-        <div className="container-page pb-3 lg:hidden">
+        {/* RECHERCHE MOBILE */}
+        <div className="pb-4 lg:hidden">
           <div className="relative">
             <Input
               name="search"
@@ -371,117 +243,55 @@ export function Header() {
               data-lpignore="true"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher…"
-              className="h-11 rounded-md border-border bg-card pr-14 shadow-none"
+              placeholder="Rechercher..."
+              className="h-10 w-full rounded-full border-transparent bg-white/60 px-4 pr-12 text-sm shadow-sm placeholder:text-foreground/50"
               aria-label="Rechercher"
             />
-            <span className="pointer-events-none absolute right-0 top-0 grid h-11 w-12 place-items-center rounded-r-md bg-accent-strong text-accent-strong-foreground">
-              <Search className="h-4 w-4" />
+            <span className="pointer-events-none absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-foreground text-background">
+              <Search className="h-3 w-3" />
             </span>
-
-            {query.trim().length > 0 && (
-              <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-card shadow-pop">
-                {results.length === 0 ? (
-                  <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                    Aucun résultat
-                  </p>
-                ) : (
-                  results.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setQuery("");
-                        navigate({
-                          to: "/produit/$slug",
-                          params: { slug: p.slug },
-                        });
-                      }}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface"
-                    >
-                      <img
-                        src={p.images[0]?.url}
-                        alt=""
-                        className="h-9 w-9 rounded object-cover"
-                      />
-                      <span className="truncate text-sm">{p.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* --------------------------- MEGA MENU --------------------------- */}
       <MegaMenu />
 
-      {/* ------------------------ MENU MOBILE (SHEET) -------------------- */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-80 p-0">
-          <SheetHeader className="border-b border-border px-5 py-4">
-            <SheetTitle>
-              <Logo size="sm" />
-            </SheetTitle>
+          <SheetHeader className="border-b border-gray-100 px-5 py-4">
+            <SheetTitle className="sr-only">Menu</SheetTitle>
           </SheetHeader>
-
           <div className="overflow-y-auto px-3 py-2">
             <Accordion type="multiple">
               {tree.map((cat: CategoryNode) => {
                 const subCategories: CategoryNode[] = cat.children ?? [];
-
                 return (
-                  <AccordionItem key={cat.id} value={cat.id}>
-                    <AccordionTrigger className="text-sm font-semibold">
-                      {cat.name}
-                    </AccordionTrigger>
+                  <AccordionItem key={cat.id} value={cat.id} className="border-none">
+                    <AccordionTrigger className="text-sm font-semibold hover:text-primary">{cat.name}</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="space-y-1 pl-2">
+                      <ul className="space-y-1 pl-2 border-l border-gray-100 ml-2">
                         <li>
                           <Link
                             to="/categorie/$slug"
                             params={{ slug: cat.slug }}
                             onClick={() => setMobileOpen(false)}
-                            className="block py-1 text-sm font-medium text-accent-strong"
+                            className="block py-1.5 pl-4 text-sm font-medium text-accent-strong hover:text-primary"
                           >
                             Tout {cat.name}
                           </Link>
                         </li>
-                        {subCategories.map((sub) => {
-                          const typedSub = sub as CategoryNode;
-                          const leafCategories: CategoryNode[] =
-                            typedSub.children ?? [];
-
-                          return (
-                            <li key={typedSub.id}>
-                              <Link
-                                to="/categorie/$slug"
-                                params={{ slug: typedSub.slug }}
-                                onClick={() => setMobileOpen(false)}
-                                className="block py-1 text-sm"
-                              >
-                                {typedSub.name}
-                              </Link>
-                              <ul className="pl-3">
-                                {leafCategories.map((leaf) => {
-                                  const typedLeaf = leaf as CategoryNode;
-                                  return (
-                                    <li key={typedLeaf.id}>
-                                      <Link
-                                        to="/categorie/$slug"
-                                        params={{ slug: typedLeaf.slug }}
-                                        onClick={() => setMobileOpen(false)}
-                                        className="block py-1 text-sm text-muted-foreground"
-                                      >
-                                        {typedLeaf.name}
-                                      </Link>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </li>
-                          );
-                        })}
+                        {subCategories.map((sub) => (
+                          <li key={sub.id}>
+                            <Link
+                              to="/categorie/$slug"
+                              params={{ slug: sub.slug }}
+                              onClick={() => setMobileOpen(false)}
+                              className="block py-1.5 pl-4 text-sm text-gray-600 hover:text-primary"
+                            >
+                              {sub.name}
+                            </Link>
+                          </li>
+                        ))}
                       </ul>
                     </AccordionContent>
                   </AccordionItem>
@@ -489,55 +299,24 @@ export function Header() {
               })}
             </Accordion>
 
-            <div className="mt-4 space-y-1 border-t border-border pt-4">
-              <Link
-                to="/promotions"
-                onClick={() => setMobileOpen(false)}
-                className="block py-1.5 text-sm font-semibold text-accent-strong"
-              >
+            <div className="mt-6 space-y-1 border-t border-gray-100 pt-4">
+              <Link to="/promotions" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-semibold text-accent-strong hover:text-primary">
                 Promotions
               </Link>
-              <Link
-                to="/compte"
-                onClick={() => setMobileOpen(false)}
-                className="block py-1.5 text-sm"
-              >
+              <Link to="/compte" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-primary">
                 Mon compte
               </Link>
-              {profile?.role === "admin" && (
-                <Link
-                  to="/admin/parametres"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-1.5 text-sm"
-                >
-                  Paramètres
-                </Link>
-              )}
-              <Link
-                to="/favoris"
-                onClick={() => setMobileOpen(false)}
-                className="block py-1.5 text-sm"
-              >
+              <Link to="/favoris" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-primary">
                 Mes favoris
               </Link>
             </div>
 
-            {/* Réseaux sociaux en bas du menu mobile */}
             {socialLinks.length > 0 && (
-              <div className="mt-4 border-t border-border pt-4">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Suivez-nous
-                </p>
+              <div className="mt-6 border-t border-gray-100 pt-4">
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Suivez-nous</p>
                 <div className="flex items-center gap-3">
                   {socialLinks.map(({ key, href, label, Icon }) => (
-                    <a
-                      key={key}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={label}
-                      className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent-strong hover:text-accent-strong"
-                    >
+                    <a key={key} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid h-9 w-9 place-items-center rounded-full bg-gray-50 text-gray-500 transition-colors hover:bg-primary hover:text-white">
                       <Icon className="h-4 w-4" />
                     </a>
                   ))}
