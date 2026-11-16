@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ImagePlus, Package, Edit2, Plus, Trash2, X, Eye, RefreshCw, Search, SlidersHorizontal, AlertCircle } from "lucide-react";
+import { ImagePlus, Package, Edit2, Plus, Trash2, X, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadToBucket, deleteFromBucket } from "@/lib/storage";
@@ -11,12 +11,16 @@ import Spinner from "@/components/ui/spinner";
 import SortArrow from "@/components/ui/sort-arrow";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductGeneral from "@/components/admin/ProductGeneral";
 import ProductImages from "@/components/admin/ProductImages";
 import { cn } from "@/lib/utils";
 import AttributesVariants from "@/components/admin/AttributesVariants";
+import { ProductGallery } from "@/components/store/ProductGallery";
+import { ProductDetails } from "@/components/store/ProductDetails";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,10 +34,17 @@ import { genId } from "@/lib/uid";
 import { RichText } from "@/components/ui/rich-text";
 import { takeAdminFocus } from "@/lib/admin-focus";
 import {
-  Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 
 export const Route = createFileRoute("/admin/produits")({
+  // Liens profonds depuis les alertes de stock : `?produit=<uuid>`, ou
+  // `?nom=<nom>` pour les alertes antérieures dont le lien n'avait pas d'id.
   validateSearch: (search: Record<string, unknown>): { produit?: string; nom?: string } => ({
     ...(typeof search["produit"] === "string" ? { produit: search["produit"] } : {}),
     ...(typeof search["nom"] === "string" ? { nom: search["nom"] } : {}),
@@ -67,12 +78,20 @@ function AdminProducts() {
   const [stockSort, setStockSort] = useState<"asc" | "desc" | null>(null);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
   const { produit: focusProductId, nom: focusProductName } = Route.useSearch();
+  // Cible transmise par la boîte de réception (cf. lib/admin-focus).
   const [relayFocus, setRelayFocus] = useState<Record<string, string> | null>(null);
-  useEffect(() => { setRelayFocus(takeAdminFocus("/admin/produits")); }, []);
+  useEffect(() => {
+    setRelayFocus(takeAdminFocus("/admin/produits"));
+  }, []);
   const focusNavigate = useNavigate();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Sélection de variante par ATTRIBUT (ex: { attrCouleurId: valRougeId, attrTailleId: valMId })
+  // plutôt que par id de variante directement — reproduit le comportement de la fiche
+  // produit boutique où l'on choisit des options une par une jusqu'à résoudre la variante.
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+
   const [toggleConfirm, setToggleConfirm] = useState<{ id: string; next: boolean } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [togglingNewId, setTogglingNewId] = useState<string | null>(null);
@@ -86,16 +105,22 @@ function AdminProducts() {
   const [removedAttributeIds, setRemovedAttributeIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // client-side filtering + sorting
   let filtered = list.filter((p) => {
     const query = search.toLowerCase();
-    return p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query) || p.variants.some((variant) => variant.sku.toLowerCase().includes(query));
+    return p.name.toLowerCase().includes(query)
+      || p.brand.toLowerCase().includes(query)
+      || p.sku.toLowerCase().includes(query)
+      || p.variants.some((variant) => variant.sku.toLowerCase().includes(query));
   });
+  // apply stock filter
   filtered = filtered.filter((p) => {
     if (stockFilter === "all") return true;
     if (stockFilter === "in") return p.stock > 5;
     if (stockFilter === "low") return p.stock > 0 && p.stock <= 5;
     return p.stock === 0;
   });
+  // category filter (includes parent matching)
   filtered = filtered.filter((p) => {
     if (categoryFilter === "all") return true;
     if (!p.category_id) return false;
@@ -108,7 +133,6 @@ function AdminProducts() {
     }
     return false;
   });
-
   const togglePriceSort = () => {
     setPriceSort((prev) => {
       const next = prev === "asc" ? "desc" : prev === "desc" ? null : "asc";
@@ -116,6 +140,7 @@ function AdminProducts() {
       return next;
     });
   };
+
   const toggleStockSort = () => {
     setStockSort((prev) => {
       const next = prev === "asc" ? "desc" : prev === "desc" ? null : "asc";
@@ -124,8 +149,12 @@ function AdminProducts() {
     });
   };
 
-  if (priceSort) filtered = [...filtered].sort((a, b) => (priceSort === "asc" ? a.price - b.price : b.price - a.price));
-  else if (stockSort) filtered = [...filtered].sort((a, b) => (stockSort === "asc" ? a.stock - b.stock : b.stock - a.stock));
+  // price sort
+  if (priceSort) {
+    filtered = [...filtered].sort((a, b) => (priceSort === "asc" ? a.price - b.price : b.price - a.price));
+  } else if (stockSort) {
+    filtered = [...filtered].sort((a, b) => (stockSort === "asc" ? a.stock - b.stock : b.stock - a.stock));
+  }
 
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -133,8 +162,13 @@ function AdminProducts() {
   const pageStart = (currentPage - 1) * pageSize + 1;
   const pageEnd = Math.min(currentPage * pageSize, filtered.length);
 
-  useEffect(() => { setCurrentPage(1); }, [search, stockFilter, categoryFilter, priceSort, stockSort]);
-  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, stockFilter, categoryFilter, priceSort, stockSort]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const looksLikeImageValue = (value: unknown) => {
     const stringValue = String(value ?? "");
@@ -144,53 +178,94 @@ function AdminProducts() {
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("products").select(`
-        *, product_images(*), product_variants(*, variant_attribute_values(attribute_value_id)),
+        *,
+        product_images(*),
+        product_variants(*, variant_attribute_values(attribute_value_id)),
         product_attributes(attribute_id, attributes(id, name, display_type, attribute_values(*)))
-      `).order("created_at", { ascending: false }).order("position", { referencedTable: "product_images", ascending: true }).order("position", { referencedTable: "product_variants", ascending: true });
+      `).order("created_at", { ascending: false }).order("position", {
+      referencedTable: "product_images",
+      ascending: true,
+    }).order("position", {
+      referencedTable: "product_variants",
+      ascending: true,
+    });
     setLoading(false);
-    if (error) { console.error(error); toast.error("Erreur lors du chargement des produits."); return; }
+    if (error) {
+      console.error(error);
+      toast.error("Erreur lors du chargement des produits.");
+      return;
+    }
     try {
       const { data: cats } = await supabase.from("categories").select("id,name,parent_id");
       const catsArr = (cats ?? []).map((c: any) => ({
-        id: c.id, name: c.name,
+        id: c.id,
+        name: c.name,
+        // Une catégorie racine se référence elle-même (cf.
+        // database/categories-parent-id.sql) : sans ce retour à null, les
+        // remontées d'ancêtres plus bas bouclent indéfiniment.
         parent_id: c.parent_id && c.parent_id !== c.id ? c.parent_id : null,
       }));
       setCategoriesList(catsArr);
       setCategoriesMap(catsArr.reduce((acc: Record<string, string>, c: any) => ({ ...acc, [c.id]: c.name }), {}));
-    } catch (e) { console.warn("could not load categories map", e); }
-
+    } catch (e) {
+      console.warn("could not load categories map", e);
+    }
     const mapped = (data ?? []).map((d: any) => {
       const attributes = (d.product_attributes ?? []).map((pa: any) => pa.attributes).filter(Boolean).map((a: any) => {
         const values = (a.attribute_values ?? []).slice().sort((x: any, y: any) => (x.position ?? 0) - (y.position ?? 0));
         const isImageAttribute = a.display_type === "image_swatch" || values.some((v: any) => looksLikeImageValue(v.value));
         return {
-          id: a.id, name: a.name, code: a.id,
+          id: a.id,
+          name: a.name,
+          code: a.id,
           type: a.display_type === "color_swatch" ? "swatch" : isImageAttribute ? "image" : "button",
-          values: values.map((v: any) => ({ id: v.id, label: v.value, image_url: isImageAttribute ? v.value : undefined, hex: v.color_hex ?? undefined })),
+          values: values.map((v: any) => ({
+            id: v.id,
+            label: v.value,
+            image_url: isImageAttribute ? v.value : undefined,
+            hex: v.color_hex ?? undefined,
+          })),
         };
       });
       return {
-        id: d.id, name: d.name, slug: d.slug, brand: d.brand ?? "", category_id: d.category_id,
-        short_description: d.short_description ?? "", description: d.description ?? "",
-        price: Number(d.base_price ?? 0), cost_price: d.cost_price == null ? null : Number(d.cost_price),
-        compare_at_price: d.compare_at_price ? Number(d.compare_at_price) : null, stock: d.stock_quantity ?? 0,
-        sku: d.sku ?? "", is_active: d.is_active ?? true, is_new: d.is_new ?? false,
-        rating: 0, reviews_count: 0,
+        id: d.id,
+        name: d.name,
+        slug: d.slug,
+        brand: d.brand ?? "",
+        category_id: d.category_id,
+        short_description: d.short_description ?? "",
+        description: d.description ?? "",
+        price: Number(d.base_price ?? 0),
+        cost_price: d.cost_price == null ? null : Number(d.cost_price),
+        compare_at_price: d.compare_at_price ? Number(d.compare_at_price) : null,
+        stock: d.stock_quantity ?? 0,
+        sku: d.sku ?? "",
+        is_active: d.is_active ?? true,
+        is_new: d.is_new ?? false,
+        rating: 0,
+        reviews_count: 0,
         created_at: d.created_at ? d.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
         images: (d.product_images ?? []).map((img: any): ProductImage => ({
-          id: img.id, product_id: d.id, url: img.url, alt: "", position: img.position ?? 0, is_main: img.is_main ?? false, variant_value: img.variant_value ?? null,
+          id: img.id, product_id: d.id, url: img.url, alt: "",
+          position: img.position ?? 0, is_main: img.is_main ?? false, variant_value: img.variant_value ?? null,
         })),
         attributes,
         variants: (d.product_variants ?? []).map((v: any): ProductVariant => ({
-          id: v.id, product_id: d.id, sku: v.sku ?? "",
+          id: v.id,
+          product_id: d.id,
+          sku: v.sku ?? "",
           options: (v.variant_attribute_values ?? []).reduce((acc: Record<string, string>, link: any) => {
             const val = link.attribute_value_id as string;
             const attr = attributes.find((a: ProductAttribute) => a.values.some((x) => x.id === val));
             if (attr) acc[attr.id] = val;
             return acc;
           }, {}),
-          price: Number(v.price), compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : null,
-          cost_price: v.cost_price == null ? null : Number(v.cost_price), stock: v.stock_quantity ?? 0, is_active: v.is_active ?? true, position: v.position ?? 0,
+          price: Number(v.price),
+          compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : null,
+          cost_price: v.cost_price == null ? null : Number(v.cost_price),
+          stock: v.stock_quantity ?? 0,
+          is_active: v.is_active ?? true,
+          position: v.position ?? 0,
         })),
         tags: [],
       };
@@ -204,7 +279,11 @@ function AdminProducts() {
     const wantedId = focusProductId ?? relayFocus?.["produit"];
     const wantedName = focusProductName ?? relayFocus?.["nom"];
     if (!wantedId && !wantedName) return;
-    const target = list.find((p) => (wantedId && p.id === wantedId) || (wantedName && p.name.trim() === wantedName.trim()));
+    const target = list.find(
+      (p) =>
+        (wantedId && p.id === wantedId) ||
+        (wantedName && p.name.trim() === wantedName.trim()),
+    );
     if (!target) return;
     setViewProduct(target);
     setRelayFocus(null);
@@ -213,6 +292,7 @@ function AdminProducts() {
     focusNavigate({ to: "/admin/produits", search: {}, replace: true });
   }, [focusProductId, focusProductName, relayFocus, list, focusNavigate]);
 
+  // Badge « Nouveau » : simple mise en avant en boutique, pas de confirmation.
   const toggleIsNew = async (id: string, next: boolean) => {
     setTogglingNewId(id);
     setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_new: next } : x)));
@@ -224,10 +304,14 @@ function AdminProducts() {
       console.error("toggle is_new", err);
       setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_new: !next } : x)));
       toast.error("Impossible de mettre à jour le badge « Nouveau ».");
-    } finally { setTogglingNewId(null); }
+    } finally {
+      setTogglingNewId(null);
+    }
   };
 
-  const mainImage = (images: ProductImage[]) => images.find((i) => i.is_main) ?? [...images].sort((a, b) => a.position - b.position)[0];
+  // image à afficher en priorité: celle marquée is_main, sinon la première par position
+  const mainImage = (images: ProductImage[]) =>
+    images.find((i) => i.is_main) ?? [...images].sort((a, b) => a.position - b.position)[0];
 
   const priceRangeForProduct = (product: Product) => {
     if (product.variants.length === 0) return { min: Number(product.price ?? 0), max: Number(product.price ?? 0) };
@@ -235,337 +319,1069 @@ function AdminProducts() {
     return { min: Math.min(...prices), max: Math.max(...prices) };
   };
 
+  const categoryMatches = (productCategoryId: string | null) => {
+    if (categoryFilter === "all") return true;
+    if (!productCategoryId) return false;
+    const target = categoryFilter as string;
+    if (productCategoryId === target) return true;
+    let cur = categoriesList.find((c) => c.id === productCategoryId);
+    while (cur) {
+      if (!cur.parent_id) break;
+      if (cur.parent_id === target) return true;
+      cur = categoriesList.find((c) => c.id === cur?.parent_id);
+    }
+    return false;
+  };
+
   const save = async () => {
     if (isSaving) return;
     setShowRequiredErrors(true);
-    if (!draft.name.trim()) { toast.error("Le nom du produit est obligatoire."); document.querySelector<HTMLInputElement>("input[autoFocus]")?.focus(); return; }
-    if (!draft.short_description.trim()) { toast.error("La description courte est obligatoire."); document.getElementById("product-short-description")?.focus(); return; }
-    if (!draft.category_id) { toast.error("La catégorie est obligatoire."); document.getElementById("product-category")?.focus(); return; }
+    if (!draft.name.trim()) {
+      toast.error("Le nom du produit est obligatoire.");
+      document.querySelector<HTMLInputElement>("input[autoFocus]")?.focus();
+      return;
+    }
+    if (!draft.short_description.trim()) {
+      toast.error("La description courte est obligatoire.");
+      document.getElementById("product-short-description")?.focus();
+      return;
+    }
+    if (!draft.category_id) {
+      toast.error("La catégorie est obligatoire.");
+      document.getElementById("product-category")?.focus();
+      return;
+    }
     const slug = draft.slug.trim() || draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     setIsSaving(true);
 
     try {
+      // ---- 1) produit ----
       let productId = draft.id;
-      let activePromotions: any[] = [];
+      let activePromotions: Array<{
+        variant_id: string | null;
+        discount_type: string | null;
+        discount_value: number;
+        starts_at: string | null;
+        ends_at: string | null;
+      }> = [];
       if (productId) {
-        const { data: promotionRows, error: promotionError } = await supabase.from("promotions").select("variant_id,discount_type,discount_value,starts_at,ends_at").eq("product_id", productId).eq("is_active", true);
+        const { data: promotionRows, error: promotionError } = await supabase
+          .from("promotions")
+          .select("variant_id,discount_type,discount_value,starts_at,ends_at")
+          .eq("product_id", productId)
+          .eq("is_active", true);
         if (promotionError) throw promotionError;
         const now = Date.now();
-        activePromotions = (promotionRows ?? []).filter((p: any) => {
-          const startsAt = p.starts_at ? new Date(p.starts_at).getTime() : -Infinity;
-          const endsAt = p.ends_at ? new Date(p.ends_at).getTime() : Infinity;
+        activePromotions = (promotionRows ?? []).filter((promotion: any) => {
+          const startsAt = promotion.starts_at ? new Date(promotion.starts_at).getTime() : -Infinity;
+          const endsAt = promotion.ends_at ? new Date(promotion.ends_at).getTime() : Infinity;
           return startsAt <= now && endsAt >= now;
-        }).map((p: any) => ({ variant_id: p.variant_id ?? null, discount_type: p.discount_type ?? null, discount_value: Number(p.discount_value ?? 0) }));
+        }).map((promotion: any) => ({
+          variant_id: promotion.variant_id ?? null,
+          discount_type: promotion.discount_type ?? null,
+          discount_value: Number(promotion.discount_value ?? 0),
+          starts_at: promotion.starts_at ?? null,
+          ends_at: promotion.ends_at ?? null,
+        }));
       }
-      const computedGlobalStock = draft.variants.length > 0 ? draft.variants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0) : Number(draft.stock ?? 0);
-      const computedBasePrice = draft.variants.length > 0 ? draft.variants.reduce((min, v) => Math.min(min, Number(v.price ?? 0)), Number(draft.price ?? 0)) : Number(draft.price ?? 0);
-      const globalPromotion = activePromotions.find((p) => p.variant_id === null);
+      const computedGlobalStock = draft.variants.length > 0
+        ? draft.variants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0)
+        : Number(draft.stock ?? 0);
+      const computedBasePrice = draft.variants.length > 0
+        ? draft.variants.reduce((min, v) => Math.min(min, Number(v.price ?? 0)), Number(draft.price ?? 0))
+        : Number(draft.price ?? 0);
+      const globalPromotion = activePromotions.find((promotion) => promotion.variant_id === null);
       const globalSellPrice = applyPromotion(computedBasePrice, globalPromotion);
       const productPayload = {
-        name: draft.name, slug, brand: draft.brand || null, category_id: draft.category_id,
-        short_description: draft.short_description.trim(), description: draft.description || null,
-        base_price: computedBasePrice, cost_price: globalSellPrice != null && globalSellPrice < computedBasePrice ? globalSellPrice : null,
-        sku: draft.sku || `SKU-${Date.now()}`, has_variants: draft.variants.length > 0, stock_quantity: computedGlobalStock,
-        is_active: draft.is_active, is_new: draft.is_new ?? false,
+        name: draft.name,
+        slug,
+        brand: draft.brand || null,
+        category_id: draft.category_id,
+        short_description: draft.short_description.trim(),
+        description: draft.description || null,
+        base_price: computedBasePrice,
+        cost_price: globalSellPrice != null && globalSellPrice < computedBasePrice ? globalSellPrice : null,
+        sku: draft.sku || `SKU-${Date.now()}`,
+        has_variants: draft.variants.length > 0,
+        stock_quantity: computedGlobalStock,
+        is_active: draft.is_active,
+        is_new: draft.is_new ?? false,
       };
       if (!productId) {
         const { data, error } = await supabase.from("products").insert(productPayload).select().single();
         if (error) throw error;
         productId = data.id;
+        // update draft with DB-generated fields so the UI shows them immediately
         setDraft((d) => ({ ...d, id: productId, sku: data.sku ?? d.sku, created_at: data.created_at ? data.created_at.slice(0, 10) : d.created_at }));
       } else {
         const { error } = await supabase.from("products").update(productPayload).eq("id", productId);
         if (error) throw error;
       }
 
-      // ============ ATTRIBUTS, VARIANTES, IMAGES (inchangé) ============
-      // (La logique complète de sauvegarde est conservée telle que tu l'avais)
+      // ---- 2) attributs + valeurs (couleur, taille…) ----
+      // On travaille sur une copie locale pour résoudre les ids réels tout de suite
+      // (setDraft est asynchrone, on ne peut pas compter dessus dans la même fonction).
+      const workingAttributes = draft.attributes.map((a) => ({ ...a, values: a.values.map((v) => ({ ...v })) }));
+      const oldValueIdToNewValueId: Record<string, string> = {};
+
+      for (const attr of workingAttributes) {
+        const attrPayload = {
+          name: attr.name,
+          display_type: attr.type === "swatch" ? "color_swatch" : attr.type === "image" ? "image_swatch" : "select",
+        };
+        const isNewAttr = attr.id.startsWith("attr-");
+        if (isNewAttr) {
+          const { data, error } = await supabase.from("attributes").insert(attrPayload).select().single();
+          if (error) throw error;
+          attr.id = data.id;
+        } else {
+          const { error } = await supabase.from("attributes").update(attrPayload).eq("id", attr.id);
+          if (error) throw error;
+        }
+        // lien produit <-> attribut (idempotent)
+        const { error: linkErr } = await supabase
+          .from("product_attributes")
+          .upsert({ product_id: productId, attribute_id: attr.id }, { onConflict: "product_id,attribute_id" });
+        if (linkErr) throw linkErr;
+
+        // ---- Valeurs de cet attribut : on gère aussi la SUPPRESSION ----
+        // Avant, on ne faisait qu'insert/update sur les valeurs présentes dans
+        // draft.attributes — si l'utilisateur retirait une valeur côté UI (bouton
+        // "supprimer" sur une couleur/taille), rien ne la supprimait jamais en
+        // base : elle réapparaissait après rechargement. On calcule ici la
+        // différence entre les valeurs existantes en base et celles gardées
+        // dans le draft pour supprimer le reste.
+        const { data: existingValueRows, error: existingValuesError } = await supabase
+          .from("attribute_values")
+          .select("id")
+          .eq("attribute_id", attr.id);
+        if (existingValuesError) throw existingValuesError;
+        const keptValueIds: string[] = [];
+
+        for (const [i, val] of attr.values.entries()) {
+          const oldId = val.id;
+          const valPayload = {
+            attribute_id: attr.id,
+            value: attr.type === "image" ? (val.image_url || val.label) : val.label,
+            color_hex: attr.type === "swatch" ? (val.hex ?? null) : null,
+            position: i,
+          };
+          if (oldId.startsWith("val-")) {
+            const { data, error } = await supabase.from("attribute_values").insert(valPayload).select().single();
+            if (error) throw error;
+            val.id = data.id;
+          } else {
+            const { error } = await supabase.from("attribute_values").update(valPayload).eq("id", val.id);
+            if (error) throw error;
+          }
+          oldValueIdToNewValueId[oldId] = val.id;
+          keptValueIds.push(val.id);
+        }
+
+        const valueIdsToDelete = (existingValueRows ?? [])
+          .map((row: any) => row.id as string)
+          .filter((id: string) => !keptValueIds.includes(id));
+        if (valueIdsToDelete.length) {
+          const { error: delValuesErr } = await supabase
+            .from("attribute_values")
+            .delete()
+            .in("id", valueIdsToDelete);
+          if (delValuesErr) throw delValuesErr;
+        }
+      }
+
+      // supprimer les attributs retirés du produit (juste le lien produit<->attribut, on ne
+      // touche pas à la table `attributes` qui pourrait être référencée ailleurs)
+      if (productId) {
+        const { data: existingLinks, error: existingLinksError } = await supabase
+          .from("product_attributes")
+          .select("attribute_id")
+          .eq("product_id", productId);
+        if (existingLinksError) throw existingLinksError;
+        const keepAttrIds = workingAttributes.map((a) => a.id);
+        const removedByDiff = (existingLinks ?? [])
+          .map((l: any) => l.attribute_id)
+          .filter((id: string) => !keepAttrIds.includes(id));
+        const toUnlink = [...new Set([...removedByDiff, ...removedAttributeIds])];
+        if (toUnlink.length) {
+          const { error } = await supabase.from("product_attributes").delete().eq("product_id", productId).in("attribute_id", toUnlink);
+          if (error) throw error;
+
+          // Les attributs créés pour ce produit ne doivent pas rester visibles
+          // après leur retrait. On conserve ceux encore utilisés ailleurs.
+          for (const attributeId of toUnlink) {
+            const { data: remainingLinks, error: remainingLinksError } = await supabase
+              .from("product_attributes")
+              .select("product_id")
+              .eq("attribute_id", attributeId)
+              .limit(1);
+            if (remainingLinksError) throw remainingLinksError;
+            if (!remainingLinks?.length) {
+              const { error: deleteAttributeError } = await supabase.from("attributes").delete().eq("id", attributeId);
+              if (deleteAttributeError) throw deleteAttributeError;
+            }
+          }
+        }
+      }
+
+      // ---- 3) variantes ----
+      const { data: existingVariantsRows } = await supabase.from("product_variants").select("id").eq("product_id", productId);
+      const existingVariantIds = (existingVariantsRows ?? []).map((e: any) => e.id);
+      const keptVariantIds: string[] = [];
+
+      for (const [i, v] of draft.variants.entries()) {
+        const isNewVariant = !existingVariantIds.includes(v.id);
+        const payload = {
+          product_id: productId,
+          // un SKU vide ou dupliqué fait échouer l'insert (colonne UNIQUE) : on force un SKU
+          // unique par défaut plutôt que de laisser Postgres rejeter silencieusement la ligne.
+          sku: v.sku?.trim() || null,
+          price: v.price ?? 0,
+          cost_price: (() => {
+            const promotion = activePromotions.find(
+              (item) => item.variant_id === v.id || item.variant_id === null,
+            );
+            const sellPrice = applyPromotion(Number(v.price ?? 0), promotion);
+            return sellPrice != null && sellPrice < Number(v.price ?? 0) ? sellPrice : null;
+          })(),
+          compare_at_price: v.compare_at_price ?? null,
+          stock_quantity: v.stock ?? 0,
+          is_active: v.is_active ?? true,
+          position: i,
+        };
+        let variantId = v.id;
+        if (isNewVariant) {
+          const { data, error } = await supabase.from("product_variants").insert(payload).select().single();
+          if (error) throw error;
+          variantId = data.id;
+          // replace temporary variant id in draft with DB id so generated fields appear
+          setDraft((d) => ({ ...d, variants: d.variants.map((vv) => (vv.id === v.id ? { ...vv, id: variantId } : vv)) }));
+        } else {
+          const { error } = await supabase.from("product_variants").update(payload).eq("id", variantId);
+          if (error) throw error;
+        }
+        keptVariantIds.push(variantId);
+
+        // lien variante <-> valeurs d'attribut choisies (couleur/taille…)
+        const resolvedValueIds = Object.values(v.options || {}).map((valId) => oldValueIdToNewValueId[valId] ?? valId);
+        const { error: delLinksErr } = await supabase.from("variant_attribute_values").delete().eq("variant_id", variantId);
+        if (delLinksErr) throw delLinksErr;
+        if (resolvedValueIds.length) {
+          const { error: insLinksErr } = await supabase
+            .from("variant_attribute_values")
+            .insert(resolvedValueIds.map((attribute_value_id) => ({ variant_id: variantId, attribute_value_id })));
+          if (insLinksErr) throw insLinksErr;
+        }
+      }
+
+      // supprimer les variantes retirées du produit (cascade sur variant_attribute_values / variant_images)
+      const toDeleteVariants = existingVariantIds.filter((id: string) => !keptVariantIds.includes(id));
+      if (toDeleteVariants.length) {
+        const { error } = await supabase.from("product_variants").delete().in("id", toDeleteVariants);
+        if (error) throw error;
+      }
+
+      // ---- 4) images : upload et associations au clic sur Enregistrer ----
+      const { data: existingImageRows, error: existingImagesError } = await supabase
+        .from("product_images")
+        .select("id,url")
+        .eq("product_id", productId);
+      if (existingImagesError) throw existingImagesError;
+
+      const keptImageIds: string[] = [];
+      for (const [i, image] of draft.images.entries()) {
+        const mappedVariantValue = image.variant_value
+          ? (oldValueIdToNewValueId[image.variant_value] ?? image.variant_value)
+          : null;
+        const imagePayload = {
+          product_id: productId,
+          url: image.url,
+          position: i,
+          is_main: image.is_main ?? i === 0,
+          variant_value: mappedVariantValue,
+        };
+
+        const isPendingImage = Boolean(image.file) || image.id.startsWith("img-");
+        if (isPendingImage) {
+          if (!image.file) {
+            throw new Error("Cette image locale doit être sélectionnée à nouveau avant l'enregistrement.");
+          }
+          const rawName = image.file.name.replace(/\s+/g, "_");
+          const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, "");
+          const path = `${productId}/${Date.now()}-${safeName}`;
+          const publicUrl = await uploadToBucket("products", path, image.file);
+          const { data: insertedImage, error: insertImageError } = await supabase
+            .from("product_images")
+            .insert({ ...imagePayload, url: publicUrl } as any)
+            .select("id")
+            .single();
+          if (insertImageError) throw insertImageError;
+          keptImageIds.push(insertedImage.id);
+          URL.revokeObjectURL(image.url);
+        } else if (!image.id.startsWith("img-")) {
+          const { error: updateImageError } = await supabase
+            .from("product_images")
+            .update({ position: i, is_main: imagePayload.is_main, variant_value: mappedVariantValue } as any)
+            .eq("id", image.id)
+            .eq("product_id", productId);
+          if (updateImageError) throw updateImageError;
+          keptImageIds.push(image.id);
+        } else {
+          throw new Error("Une image sélectionnée est introuvable. Veuillez la sélectionner à nouveau.");
+        }
+      }
+
+      const removedImageRows = (existingImageRows ?? []).filter((row: any) => !keptImageIds.includes(row.id));
+      for (const image of removedImageRows) {
+        const { error: deleteImageError } = await supabase.from("product_images").delete().eq("id", image.id);
+        if (deleteImageError) throw deleteImageError;
+        const match = String(image.url ?? "").match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+        if (match) {
+          try {
+            await deleteFromBucket(match[1]!, decodeURIComponent(match[2]!));
+          } catch (storageError) {
+            console.warn("failed to delete removed product image", storageError);
+          }
+        }
+      }
 
       toast.success(draft.id ? "Produit mis à jour." : "Produit créé.");
       await fetchProducts();
       setOpen(false);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      const msg = err?.message ?? String(err);
-      if (msg.includes("violates row-level security")) toast.error("Insertion refusée par les policies RLS.");
-      else if (msg.includes("duplicate key")) toast.error("Un SKU identique existe déjà.");
-      else toast.error(`Erreur lors de l'enregistrement : ${msg}`);
-    } finally { setIsSaving(false); }
+      const msg = (err as any)?.message ?? String(err);
+      if (msg.includes("violates row-level security") || msg.includes("row-level security")) {
+        toast.error("Insertion refusée par les policies RLS — vérifiez les policies DB ou connectez-vous en tant qu'admin.");
+      } else if (msg.includes("duplicate key") || msg.includes("already exists")) {
+        toast.error("Un SKU identique existe déjà — changez le SKU de la variante en conflit.");
+      } else {
+        toast.error(`Erreur lors de l'enregistrement : ${msg}`);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  /* Helpers attributs / variantes */
+  /* ---- gestion des attributs / variantes dans le formulaire ---- */
   const addAttribute = () => {
-    const attr: ProductAttribute = { id: genId("attr"), name: "Couleur", code: `attr_${draft.attributes.length + 1}`, type: "swatch", values: [{ id: genId("val"), label: "Aspen Black", hex: "#111827" }] };
+    const attr: ProductAttribute = {
+      id: genId("attr"),
+      name: "Couleur",
+      code: `attr_${draft.attributes.length + 1}`,
+      type: "swatch",
+      values: [{ id: genId("val"), label: "Aspen Black", hex: "#111827" }],
+    };
     setDraft({ ...draft, attributes: [...draft.attributes, attr] });
   };
-  const updateAttribute = (id: string, patch: Partial<ProductAttribute>) => setDraft({ ...draft, attributes: draft.attributes.map((a: ProductAttribute) => (a.id === id ? { ...a, ...patch } : a)) });
+
+  const updateAttribute = (id: string, patch: Partial<ProductAttribute>) =>
+    setDraft({
+      ...draft,
+      attributes: draft.attributes.map((a: ProductAttribute) => (a.id === id ? { ...a, ...patch } : a)),
+    });
+
   const removeAttribute = (id: string) => {
-    if (!id.startsWith("attr-")) setRemovedAttributeIds((current) => (current.includes(id) ? current : [...current, id]));
-    setDraft({ ...draft, attributes: draft.attributes.filter((a) => a.id !== id), variants: draft.variants.map((v) => { const { [id]: _removed, ...rest } = v.options; return { ...v, options: rest }; }) });
+    if (!id.startsWith("attr-")) {
+      setRemovedAttributeIds((current) => (current.includes(id) ? current : [...current, id]));
+    }
+    setDraft({
+      ...draft,
+      attributes: draft.attributes.filter((a) => a.id !== id),
+      // on retire aussi ce choix de toutes les variantes qui l'utilisaient
+      variants: draft.variants.map((v) => {
+        const { [id]: _removed, ...rest } = v.options;
+        return { ...v, options: rest };
+      }),
+    });
   };
-  const addValue = (attrId: string) => updateAttribute(attrId, { values: [...(draft.attributes.find((a) => a.id === attrId)?.values ?? []), { id: genId("val"), label: "Aspen Black", hex: "#111827" }] });
+
+  const addValue = (attrId: string) =>
+    updateAttribute(attrId, {
+      values: [
+        ...(draft.attributes.find((a) => a.id === attrId)?.values ?? []),
+        { id: genId("val"), label: "Aspen Black", hex: "#111827" },
+      ],
+    });
+
+  // Supprime une valeur (ex: une couleur ou une taille) d'un attribut.
+  // C'était la pièce manquante : addValue existait pour ajouter, mais aucune
+  // fonction équivalente n'existait pour retirer une valeur, et rien n'était
+  // passé en prop à AttributesVariants pour ça — donc le bouton "supprimer"
+  // dans l'onglet Attributs n'avait aucun handler à appeler.
+  // On retire aussi cette valeur de toutes les variantes qui l'utilisaient,
+  // sinon une variante garderait une référence à un value_id qui n'existe
+  // plus dans draft.attributes (incohérence silencieuse au moment du save).
   const removeValue = (attrId: string, valueId: string) => {
-    setDraft({ ...draft, attributes: draft.attributes.map((a) => a.id === attrId ? { ...a, values: a.values.filter((v) => v.id !== valueId) } : a), variants: draft.variants.map((v) => { if (v.options[attrId] !== valueId) return v; const { [attrId]: _removed, ...rest } = v.options; return { ...v, options: rest }; }) });
+    setDraft({
+      ...draft,
+      attributes: draft.attributes.map((a) =>
+        a.id === attrId ? { ...a, values: a.values.filter((v) => v.id !== valueId) } : a
+      ),
+      variants: draft.variants.map((v) => {
+        if (v.options[attrId] !== valueId) return v;
+        const { [attrId]: _removed, ...rest } = v.options;
+        return { ...v, options: rest };
+      }),
+    });
   };
+
   const addVariant = () => {
     const defaultVariantPrice = draft.variants.length > 0 ? draft.variants[0]?.price ?? draft.price : draft.price;
-    const variant: ProductVariant = { id: genId("v"), product_id: draft.id || "new", sku: "", options: {}, price: defaultVariantPrice, compare_at_price: draft.compare_at_price, stock: 0, is_active: true, position: draft.variants.length };
+    const variant: ProductVariant = {
+      id: genId("v"),
+      product_id: draft.id || "new",
+      // sku will be generated by the DB trigger; keep empty here
+      sku: "",
+      options: {},
+      price: defaultVariantPrice,
+      compare_at_price: draft.compare_at_price,
+      stock: 0,
+      is_active: true,
+      position: draft.variants.length,
+    };
     const nextVariants = [...draft.variants, variant];
-    setDraft({ ...draft, variants: nextVariants, stock: nextVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0) });
+    setDraft({
+      ...draft,
+      variants: nextVariants,
+      stock: nextVariants.length > 0 ? nextVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0) : draft.stock,
+    });
   };
+
   const updateVariant = (id: string, patch: Partial<ProductVariant>) => {
     const nextVariants = draft.variants.map((v: ProductVariant) => (v.id === id ? { ...v, ...patch } : v));
-    setDraft({ ...draft, variants: nextVariants, stock: nextVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0) });
+    setDraft({
+      ...draft,
+      variants: nextVariants,
+      stock: nextVariants.length > 0 ? nextVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0) : draft.stock,
+    });
   };
-  const setVariantOption = (variantId: string, attributeId: string, valueId: string) => setDraft({ ...draft, variants: draft.variants.map((v) => v.id === variantId ? { ...v, options: { ...v.options, [attributeId]: valueId } } : v) });
+
+  // fixe la valeur choisie pour un attribut donné (ex: Couleur -> Rouge) sur une variante
+  const setVariantOption = (variantId: string, attributeId: string, valueId: string) =>
+    setDraft({
+      ...draft,
+      variants: draft.variants.map((v) =>
+        v.id === variantId ? { ...v, options: { ...v.options, [attributeId]: valueId } } : v
+      ),
+    });
+
   const moveVariant = (id: string, dir: -1 | 1) => {
     const idx = draft.variants.findIndex((v) => v.id === id);
     const swapIdx = idx + dir;
     if (idx < 0 || swapIdx < 0 || swapIdx >= draft.variants.length) return;
     const next = [...draft.variants];
-    const a = next[idx]; const b = next[swapIdx];
+    const a = next[idx];
+    const b = next[swapIdx];
     if (!a || !b) return;
-    next[idx] = b; next[swapIdx] = a;
+    next[idx] = b;
+    next[swapIdx] = a;
     setDraft({ ...draft, variants: next.map((v, i) => ({ ...v, position: i })) });
   };
 
   return (
-    <div className="min-h-screen space-y-6 pb-8 bg-white">
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div>
+          <h1 className="text-2xl font-bold">Produits</h1>
+          <p className="text-sm text-muted-foreground">{list.length} produits au catalogue.</p>
+        </div>
 
-      {/* HEADER */}
-      <div className="relative overflow-hidden rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
-        <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-700">
-              <Package className="h-7 w-7" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-[#123b25]">Gestion des produits</h1>
-                <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Catalogue</span>
-              </div>
-              <p className="mt-1 text-sm text-gray-500">Gérez vos produits, leurs variantes, leurs prix et leurs stocks.</p>
-            </div>
+        <div className="mt-8 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher…" className="w-80 sm:w-96" />
+            <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
+              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les stocks</SelectItem>
+                <SelectItem value="in">En stock (&gt;5)</SelectItem>
+                <SelectItem value="low">Faible (&le;5)</SelectItem>
+                <SelectItem value="out">Rupture</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as any)}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {Object.entries(categoriesMap).map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
+              </SelectContent>
+            </Select>
           </div>
-          <Button className="h-11 gap-2 rounded-xl bg-green-700 px-5 text-white shadow-sm hover:bg-green-800" onClick={() => { setDraft(emptyProduct); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }}>
-            <Plus className="h-4 w-4" /> Nouveau produit
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={refresh} title="Rafraîchir" style={{ border: "1px solid", borderColor: "hsl(240, 3.7%, 15.9%)" }}>
+              ↻
+            </Button>
+              <Button variant="accent" onClick={() => { setDraft(emptyProduct); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }}>
+              <Plus className="h-4 w-4" /> Nouveau produit
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* STATISTICS */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {[
-          { label: "Total produits", value: list.length, icon: Package, color: "text-green-700 bg-green-50", desc: "Produits dans le catalogue" },
-          { label: "Produits actifs", value: list.filter(p => p.is_active).length, icon: Eye, color: "text-green-700 bg-green-50", desc: "Visibles dans la boutique" },
-          { label: "Stock faible", value: list.filter(p => p.stock > 0 && p.stock <= 5).length, icon: AlertCircle, color: "text-orange-600 bg-orange-50", desc: "Produits à réapprovisionner" },
-          { label: "Ruptures de stock", value: list.filter(p => p.stock === 0).length, icon: X, color: "text-red-600 bg-red-50", desc: "Produits indisponibles" },
-        ].map((item) => (
-          <div key={item.label} className="rounded-2xl border border-green-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-gray-500">{item.label}</span>
-              <div className={cn("rounded-xl p-2.5", item.color)}><item.icon className="h-5 w-5" /></div>
-            </div>
-            <p className="mt-3 text-3xl font-bold tabular-nums text-[#123b25]">{item.value}</p>
-            <p className="mt-1 text-xs text-gray-400">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* FILTERS */}
-      <div className="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+      {/* TABLEAU — restylé comme la page Commandes */}
+      <div className="overflow-hidden rounded-xl border border-green-100 bg-white shadow-sm">
+        <div className="flex flex-col gap-2 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-semibold text-[#123b25]">Catalogue des produits</h2>
-            <p className="text-xs text-gray-500">Recherchez et gérez vos produits.</p>
+            <h2 className="font-semibold text-[#123b25]">Liste des produits</h2>
+            <p className="mt-1 text-xs text-gray-500">{filtered.length} résultat(s) correspondant à vos critères</p>
           </div>
-          <Button variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-green-200 text-green-700 hover:bg-green-50" onClick={refresh} disabled={loading}>
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} /> Actualiser
-          </Button>
+          <div className="text-xs text-gray-400">Page {currentPage} sur {Math.max(totalPages, 1)}</div>
         </div>
 
-        <div className="flex flex-col gap-3 lg:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom, marque ou SKU..." className="h-11 rounded-xl border-green-200 bg-gray-50 pl-10 focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-100" />
-            {search && (
-              <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><X className="h-4 w-4" /></button>
-            )}
-          </div>
-          <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
-            <SelectTrigger className="h-11 w-full rounded-xl border-green-200 bg-gray-50 text-gray-600 lg:w-48"><SelectValue placeholder="Filtrer le stock" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les stocks</SelectItem>
-              <SelectItem value="in">En stock (&gt; 5)</SelectItem>
-              <SelectItem value="low">Stock faible (1-5)</SelectItem>
-              <SelectItem value="out">Rupture de stock</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as any)}>
-            <SelectTrigger className="h-11 w-full rounded-xl border-green-200 bg-gray-50 text-gray-600 lg:w-52"><SelectValue placeholder="Catégorie" /></SelectTrigger>
-            <SelectContent className="max-h-72">
-              <SelectItem value="all">Toutes les catégories</SelectItem>
-              {Object.entries(categoriesMap).map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-gray-500">{filtered.length} résultat(s) trouvé(s)</p>
-          {(search || stockFilter !== "all" || categoryFilter !== "all") && (
-            <button type="button" onClick={() => { setSearch(""); setStockFilter("all"); setCategoryFilter("all"); }} className="text-xs font-medium text-green-700 hover:underline">Réinitialiser les filtres</button>
-          )}
-        </div>
-      </div>
-
-      {/* PRODUCT TABLE */}
-      <div className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <div>
-            <h3 className="font-semibold text-[#123b25]">Liste des produits</h3>
-            <p className="text-xs text-gray-500">Gestion et suivi du catalogue</p>
-          </div>
-          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 tabular-nums">{filtered.length} produits</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <Table className="min-w-[1050px]">
-            <TableHeader className="bg-green-50/50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-20 pl-5 text-xs font-semibold uppercase text-green-700/70">Image</TableHead>
-                <TableHead className="text-xs font-semibold uppercase text-green-700/70">Produit</TableHead>
-                <TableHead className="text-xs font-semibold uppercase text-green-700/70">
-                  <button type="button" className="flex items-center gap-2 font-semibold" onClick={togglePriceSort}>Prix <SortArrow dir={priceSort} ariaLabel="Trier par prix" /></button>
+        <div className="max-h-[100vh] overflow-auto">
+          <Table className="min-w-[900px]">
+            <TableHeader className="sticky top-0 z-10">
+              <TableRow className="bg-green-50/50 hover:bg-green-50/50">
+                <TableHead className="w-16 pl-5"></TableHead>
+                <TableHead className="font-semibold text-green-700/80">Produit</TableHead>
+                <TableHead className="font-semibold text-green-700/80">
+                  <button type="button" className="flex items-center gap-2 transition hover:text-green-900" onClick={togglePriceSort}>
+                    <span>Prix</span>
+                    <SortArrow dir={priceSort} ariaLabel="Trier par prix" />
+                  </button>
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase text-green-700/70">
-                  <button type="button" className="flex items-center gap-2 font-semibold" onClick={toggleStockSort}>Stock <SortArrow dir={stockSort} ariaLabel="Trier par stock" /></button>
+                <TableHead className="font-semibold text-green-700/80">
+                  <button type="button" className="flex items-center gap-2 transition hover:text-green-900" onClick={toggleStockSort}>
+                    <span>Stock</span>
+                    <SortArrow dir={stockSort} ariaLabel="Trier par stock" />
+                  </button>
                 </TableHead>
-                <TableHead className="text-center text-xs font-semibold uppercase text-green-700/70">Variantes</TableHead>
-                <TableHead className="text-center text-xs font-semibold uppercase text-green-700/70">Nouveau</TableHead>
-                <TableHead className="text-center text-xs font-semibold uppercase text-green-700/70">Statut</TableHead>
-                <TableHead className="pr-5 text-right text-xs font-semibold uppercase text-green-700/70">Actions</TableHead>
+                <TableHead className="font-semibold text-green-700/80">Variantes</TableHead>
+                <TableHead className="font-semibold text-green-700/80">Nouveau</TableHead>
+                <TableHead className="font-semibold text-green-700/80">Actif</TableHead>
+                <TableHead className="pr-5 text-center font-semibold text-green-700/80">Actions</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={8} className="h-64"><div className="flex justify-center"><Spinner showLabel /></div></TableCell></TableRow>
-              ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-64">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="mb-3 rounded-2xl bg-gray-100 p-4"><Package className="h-8 w-8 text-gray-300" /></div>
-                      <p className="font-semibold text-[#123b25]">Aucun produit trouvé</p>
-                      <p className="mt-1 text-sm text-gray-500">Modifiez votre recherche ou vos filtres.</p>
-                      <Button variant="outline" size="sm" className="mt-4 border-green-200 text-green-700 hover:bg-green-50" onClick={() => { setSearch(""); setStockFilter("all"); setCategoryFilter("all"); }}>Réinitialiser</Button>
+                  <TableCell colSpan={8} className="py-16 text-center text-gray-400">
+                    <div className="flex items-center justify-center">
+                      <Spinner showLabel />
                     </div>
                   </TableCell>
                 </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-16 text-center">
+                    <Package className="mx-auto h-8 w-8 text-gray-300" />
+                    <p className="mt-2 text-gray-500">Aucun produit trouvé.</p>
+                  </TableCell>
+                </TableRow>
               ) : (
-                paginatedProducts.map((p) => {
-                  const image = mainImage(p.images);
-                  return (
-                    <TableRow key={p.id} className="group transition-colors hover:bg-green-50/30">
-                      <TableCell className="pl-5">
-                        <Avatar className="h-12 w-12 rounded-xl border border-green-100 shadow-sm">
-                          {image?.url ? <AvatarImage src={image.url} alt={p.name} className="object-cover" /> : null}
-                          <AvatarFallback className="rounded-xl bg-gray-50"><Package className="h-5 w-5 text-gray-300" /></AvatarFallback>
-                        </Avatar>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[280px]">
-                          <p className="truncate font-semibold text-[#123b25]">{p.name}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                            <span className="truncate">{p.sku || "Sans SKU"}</span>
-                            <span>•</span>
-                            <span className="truncate">{categoriesMap[p.category_id ?? ""] || "Sans catégorie"}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-semibold text-[#123b25] tabular-nums">
-                          {p.variants.length > 0 ? (() => { const { min, max } = priceRangeForProduct(p); return min === max ? formatPrice(min) : <span className="text-sm">{formatPrice(min)} – {formatPrice(max)}</span>; })() : formatPrice(p.price)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={cn("inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold", p.stock === 0 ? "bg-red-50 text-red-600" : p.stock <= 5 ? "bg-orange-50 text-orange-600" : "bg-green-50 text-green-700")}>
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />{p.stock === 0 ? "Rupture" : `${p.stock} unités`}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center"><span className="inline-flex min-w-8 items-center justify-center rounded-lg bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600">{p.variants.length}</span></TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center"><Switch checked={!!p.is_new} disabled={togglingNewId === p.id} onCheckedChange={(next) => toggleIsNew(p.id, next)} className="data-[state=checked]:bg-green-600" /></div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center"><Switch checked={!!p.is_active} onCheckedChange={() => setToggleConfirm({ id: p.id, next: !p.is_active })} className="data-[state=checked]:bg-green-600" /></div>
-                      </TableCell>
-                      <TableCell className="pr-5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-lg border-green-200 text-green-700 hover:bg-green-50" onClick={() => { setViewProduct(p); setSelectedOptions({}); setSelectedImageId(null); }} aria-label="Voir le produit"><Eye className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-lg border-green-200 text-green-700 hover:bg-green-50" onClick={() => { setDraft(p); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }} aria-label="Modifier le produit"><Edit2 className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-lg border-red-100 text-red-600 hover:bg-red-50" onClick={() => setConfirmDeleteId(p.id)} aria-label="Supprimer le produit"><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                paginatedProducts.map((p) => (
+                  <TableRow key={p.id} className="group transition-colors hover:bg-green-50/30">
+                    <TableCell className="pl-5">
+                      <Avatar className="h-10 w-10 rounded-md">
+                        {mainImage(p.images)?.url ? (
+                          <AvatarImage src={mainImage(p.images)!.url} alt={p.name} className="h-full w-full rounded-md object-cover" />
+                        ) : (
+                          <AvatarFallback className="rounded-md">{p.name.slice(0, 1)}</AvatarFallback>
+                        )}
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-gray-900">{p.name}</p>
+                      <p className="text-xs text-gray-500">{p.sku}</p>
+                    </TableCell>
+
+                    <TableCell className="font-semibold text-[#123b25]">
+                      {p.variants.length > 0 ? (() => {
+                        const { min, max } = priceRangeForProduct(p);
+                        return min === max ? (
+                          <span>{formatPrice(min)}</span>
+                        ) : (
+                          <span className="text-sm">
+                            {formatPrice(min)} – {formatPrice(max)}
+                          </span>
+                        );
+                      })() : (
+                        formatPrice(p.price)
+                      )}
+                    </TableCell>
+                    <TableCell className={p.stock === 0 ? "font-semibold text-destructive" : ""}>{p.stock}</TableCell>
+                    <TableCell className="text-gray-500">{p.variants.length}</TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={!!p.is_new}
+                        disabled={togglingNewId === p.id}
+                        onCheckedChange={(next) => toggleIsNew(p.id, next)}
+                        aria-label={p.is_new ? "Retirer le badge Nouveau" : "Afficher le badge Nouveau"}
+                        className="data-[state=checked]:bg-accent-strong"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={!!p.is_active}
+                        onCheckedChange={() => setToggleConfirm({ id: p.id, next: !p.is_active })}
+                        className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-destructive"
+                      />
+                    </TableCell>
+                    <TableCell className="pr-5 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => { setViewProduct(p); setSelectedOptions({}); setSelectedImageId(null); }}
+                          aria-label="Voir"
+                          className="h-9 w-9 rounded-lg text-gray-400 transition hover:bg-green-50 hover:text-green-700"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => { setDraft(p); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); }}
+                          aria-label="Éditer"
+                          className="h-9 w-9 rounded-lg text-gray-400 transition hover:bg-green-50 hover:text-green-700"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 rounded-lg text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                          onClick={() => setConfirmDeleteId(p.id)}
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
         </div>
 
-        {/* PAGINATION */}
         {filtered.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-gray-500">Affichage <span className="font-semibold text-[#123b25]">{pageStart}–{pageEnd}</span> sur <span className="font-semibold text-[#123b25]">{filtered.length}</span> produits</p>
+          <div className="flex flex-col gap-3 border-t border-gray-100 bg-green-50/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-gray-500">
+              Affichage <span className="font-semibold text-[#123b25]">{pageStart}{"–"}{pageEnd}</span> sur <span className="font-semibold text-[#123b25]">{filtered.length}</span> produit(s)
+            </p>
             <Pagination className="mx-0 w-auto justify-end">
               <PaginationContent>
-                <PaginationItem><PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(page => Math.max(1, page - 1)); }} aria-disabled={currentPage === 1} className={cn("rounded-lg", currentPage === 1 && "pointer-events-none opacity-40")} /></PaginationItem>
-                {Array.from({ length: totalPages }, (_, index) => index + 1).map(page => (
-                  <PaginationItem key={page}><PaginationLink href="#" isActive={currentPage === page} onClick={(e) => { e.preventDefault(); setCurrentPage(page); }} className={cn("rounded-lg", currentPage === page ? "border-green-600 bg-green-50 text-green-700" : "")}>{page}</PaginationLink></PaginationItem>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setCurrentPage((page) => Math.max(1, page - 1));
+                    }}
+                    aria-disabled={currentPage === 1}
+                    className={currentPage === 1 ? "pointer-events-none opacity-40" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === page}
+                      className={cn("cursor-pointer", currentPage === page && "border-green-600 bg-green-50 text-green-700")}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setCurrentPage(page);
+                      }}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
                 ))}
-                <PaginationItem><PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(page => Math.min(totalPages, page + 1)); }} aria-disabled={currentPage === totalPages} className={cn("rounded-lg", currentPage === totalPages && "pointer-events-none opacity-40")} /></PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setCurrentPage((page) => Math.min(totalPages, page + 1));
+                    }}
+                    aria-disabled={currentPage === totalPages}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-40" : "cursor-pointer"}
+                  />
+                </PaginationItem>
               </PaginationContent>
             </Pagination>
           </div>
         )}
       </div>
 
-      {/* VIEW PRODUCT DIALOG */}
-      <Dialog open={Boolean(viewProduct)} onOpenChange={(v) => { if (!v) { setViewProduct(null); setSelectedOptions({}); setSelectedImageId(null); } }}>
-        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto rounded-2xl border-green-100 p-0">
-          <div className="border-b border-green-100 bg-green-50/50 px-6 py-5">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-green-100 p-2.5 text-green-700"><Package className="h-5 w-5" /></div>
-                <div>
-                  <DialogTitle className="text-xl text-[#123b25]">{viewProduct?.name || "Détails du produit"}</DialogTitle>
-                  <p className="mt-1 text-xs text-gray-500">Aperçu détaillé du produit</p>
-                </div>
-              </div>
-            </DialogHeader>
-          </div>
-          <div className="p-6">
-            {viewProduct && (() => {
-              // Logique d'affichage des images/variantes existante
-              return <></>;
-            })()}
-          </div>
-        </DialogContent>
-      </Dialog>
+    {/* View product dialog */}
+    <Dialog
+      open={Boolean(viewProduct)}
+      onOpenChange={(v) => {
+        if (!v) {
+          setViewProduct(null);
+          setSelectedOptions({});
+          setSelectedImageId(null);
+        }
+      }}
+    >
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{viewProduct ? viewProduct.name : ""}</DialogTitle>
+        </DialogHeader>
 
-      {/* CONFIRM TOGGLE */}
-      <Dialog open={Boolean(toggleConfirm)} onOpenChange={v => { if (!v) setToggleConfirm(null); }}>
-        <DialogContent className="max-w-md rounded-2xl border-green-100">
-          <DialogHeader><DialogTitle className="text-[#123b25]">Confirmer le changement de statut</DialogTitle></DialogHeader>
-          <p className="text-sm text-gray-500">Voulez-vous vraiment {toggleConfirm?.next ? "activer" : "désactiver"} ce produit ?</p>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setToggleConfirm(null)} disabled={isToggling} className="border-gray-200 text-gray-600 hover:bg-gray-50">Annuler</Button>
-            <Button className="bg-green-700 text-white hover:bg-green-800" onClick={async () => {
+        {viewProduct && (() => {
+          const sorted = [...viewProduct.images].sort(
+            (a, b) => Number(b.is_main) - Number(a.is_main) || a.position - b.position
+          );
+
+          const hasVariants = viewProduct.variants.length > 0;
+
+          const defaultSelectedOptions = hasVariants
+            ? viewProduct.attributes.reduce<Record<string, string>>((acc, attr) => {
+                const firstVariantValue = viewProduct.variants[0]?.options?.[attr.id];
+                if (firstVariantValue) acc[attr.id] = firstVariantValue;
+                return acc;
+              }, {})
+            : {};
+
+          const effectiveSelectedOptions = Object.keys(selectedOptions).length > 0 ? selectedOptions : defaultSelectedOptions;
+
+          // La sélection n'est "complète" que si une valeur est choisie pour CHAQUE attribut
+          const isSelectionComplete =
+            viewProduct.attributes.length > 0 &&
+            viewProduct.attributes.every((attr) => Boolean(effectiveSelectedOptions[attr.id]));
+
+          // Variante correspondant exactement à la combinaison choisie (comme côté boutique)
+          const selectedVariant = isSelectionComplete
+            ? viewProduct.variants.find((v) =>
+                viewProduct.attributes.every((attr) => v.options[attr.id] === effectiveSelectedOptions[attr.id])
+              ) ?? null
+            : null;
+
+          // Image liée à la combinaison choisie. product_images.variant_value stocke l'ID
+          // de la valeur d'attribut (attribute_values.id) — donc on compare aux VALEURS
+          // sélectionnées (ids), pas aux labels. C'est ce qui empêchait l'image de
+          // s'afficher : avant on comparait à des labels ("Rouge") alors que la colonne
+          // contient des ids.
+          const chosenValueIds = Object.values(effectiveSelectedOptions);
+          const variantImage = chosenValueIds.length
+            ? sorted.find((img) => img.variant_value && chosenValueIds.includes(img.variant_value))
+            : null;
+
+          const activeImage = selectedImageId
+            ? sorted.find((img) => img.id === selectedImageId) ?? variantImage ?? sorted[0]
+            : variantImage ?? sorted[0];
+
+          const resolveAttributeImage = (valueId: string) => {
+            const value = viewProduct.attributes
+              .flatMap((attr) => attr.values)
+              .find((item) => item.id === valueId);
+            if (value?.image_url && looksLikeImageValue(value.image_url)) return value.image_url;
+            if (value?.label && looksLikeImageValue(value.label)) return value.label;
+            return viewProduct.images.find((img) => img.variant_value === valueId)?.url;
+          };
+
+          const displayPrice = selectedVariant ? selectedVariant.price : viewProduct.price;
+          const displayComparePrice = selectedVariant ? selectedVariant.compare_at_price : viewProduct.compare_at_price;
+          const displayStock = selectedVariant ? selectedVariant.stock : viewProduct.stock;
+          const variantPrices = viewProduct.variants.map((variant) => variant.price);
+          const variantPromoPrices = viewProduct.variants.map((variant) => variant.cost_price ?? variant.price);
+          const hasOneGlobalPrice =
+            !hasVariants ||
+            (variantPrices.every((price) => price === variantPrices[0]) &&
+              variantPromoPrices.every((price) => price === variantPromoPrices[0]));
+          const globalOriginalPrice = hasVariants ? viewProduct.variants[0]?.price ?? viewProduct.price : viewProduct.price;
+          const globalPromoPrice = hasVariants
+            ? viewProduct.variants[0]?.cost_price ?? globalOriginalPrice
+            : viewProduct.cost_price ?? viewProduct.price;
+          const globalDiscountPercent = globalOriginalPrice && globalPromoPrice !== globalOriginalPrice
+            ? Math.round(((globalOriginalPrice - globalPromoPrice) / globalOriginalPrice) * 100)
+            : null;
+
+          const chooseOption = (attributeId: string, valueId: string) => {
+            setSelectedOptions((prev) => ({ ...prev, [attributeId]: valueId }));
+            // laisse l'image suivre automatiquement la nouvelle combinaison
+            setSelectedImageId(null);
+          };
+
+          return (
+            <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="space-y-3">
+               
+
+                <div className="flex min-h-[320px] items-center justify-center overflow-hidden rounded-xl border border-blue-500 bg-surface">
+                  {activeImage?.url ? (
+                    <img src={activeImage.url} alt={viewProduct.name} className="h-full max-h-[320px] w-full object-contain" />
+                  ) : (
+                    <div className="flex h-[320px] w-full items-center justify-center text-muted-foreground">
+                      Aucune image
+                    </div>
+                  )}
+                </div>
+
+                {sorted.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {sorted.map((img) => (
+                      <button
+                        key={img.id}
+                        type="button"
+                        onClick={() => setSelectedImageId(img.id)}
+                        className={cn(
+                          "shrink-0 overflow-hidden rounded-md border-2 transition-colors",
+                          activeImage?.id === img.id
+                            ? "border-blue-500"
+                            : "border-transparent hover:border-border",
+                        )}
+                      >
+                        <Avatar className="h-14 w-14 rounded-none">
+                          <AvatarImage src={img.url} alt={viewProduct.name} className="object-cover" />
+                        </Avatar>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+             
+              </div>
+
+              <div className="space-y-4 pt-1">
+                <div className="space-y-3 text-sm">
+                  <div className="text-muted-foreground">
+                    <span className="font-bold text-foreground">Marque :</span> {viewProduct.brand || "—"}
+                  </div>
+               
+                  <div className="text-muted-foreground">
+                    <span className="font-bold text-foreground">SKU :</span> {viewProduct.sku || "—"}
+                  </div>
+                  {hasVariants && hasOneGlobalPrice && (
+                    <div className="my-3 pt-1">
+                      <div className="font-bold text-foreground">Prix global :</div>
+                      <div className="mt-3 flex items-baseline gap-2 font-semibold">
+                        <span className="text-xl">{formatPrice(globalPromoPrice)}</span>
+                        {globalDiscountPercent !== null && (
+                          <span className="text-md text-muted-foreground line-through">{formatPrice(globalOriginalPrice)}</span>
+                        )}
+                        {globalDiscountPercent !== null && (
+                          <span className="text-md font-bold text-destructive">
+                            -{Math.abs(globalDiscountPercent)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className={viewProduct.stock === 0 ? "mt-3 font-semibold text-destructive" : "mt-3 text-muted-foreground"}>
+                        <span className="font-bold text-foreground">Stock global :</span> {viewProduct.stock}
+                      </div>
+                    </div>
+                  )}
+                     <div className="text-muted-foreground">
+                    <span className="font-bold text-foreground">Catégorie :</span> {categoriesMap[viewProduct.category_id ?? ""] ?? "—"}
+                  </div>
+                  <div className="text-muted-foreground">
+                    <span className="font-bold text-foreground">Statut :</span> {viewProduct.is_active ? "Actif" : "Inactif"}
+                  </div>
+                </div>
+
+                {hasVariants ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold">Variantes :</h4>
+
+                    </div>
+
+                    <div className="space-y-2">
+                      {viewProduct.attributes.map((attribute) => {
+                        const selectedValueId = effectiveSelectedOptions[attribute.id];
+                        const selectedValueLabel = attribute.values.find((v) => v.id === selectedValueId)?.label;
+
+                        return (
+                          <div key={attribute.id} className="space-y-2">
+                            <p className="text-sm font-medium">
+                              {attribute.name}
+                          
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {attribute.values.map((value) => {
+                                const isSelected = effectiveSelectedOptions[attribute.id] === value.id;
+
+                                if (attribute.type === "swatch") {
+                                  return (
+                                    <button
+                                      key={value.id}
+                                      type="button"
+                                      title={value.label}
+                                      onClick={() => chooseOption(attribute.id, value.id)}
+                                      className={cn(
+                                        "h-8 w-8 rounded-full border-2 transition",
+                                        isSelected
+                                          ? "border-blue-500 ring-2 ring-blue-200"
+                                          : "border-border hover:border-muted-foreground",
+                                      )}
+                                      style={{ backgroundColor: value.hex || "#e5e7eb" }}
+                                    />
+                                  );
+                                }
+
+                                if (attribute.type === "image" || looksLikeImageValue(value.label) || looksLikeImageValue(value.image_url)) {
+                                  const previewUrl = resolveAttributeImage(value.id);
+                                  return (
+                                    <button
+                                      key={value.id}
+                                      type="button"
+                                      title={value.label}
+                                      onClick={() => chooseOption(attribute.id, value.id)}
+                                      className={cn(
+                                        "grid h-9 w-9 place-items-center overflow-hidden rounded-full border-2 transition",
+                                        isSelected
+                                          ? "border-blue-500 ring-2 ring-blue-200"
+                                          : "border-border hover:border-muted-foreground",
+                                      )}
+                                    >
+                                      {previewUrl ? (
+                                        <img
+                                          src={previewUrl}
+                                          alt={value.label}
+                                          className="h-full w-full rounded-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="grid h-full w-full place-items-center rounded-full border border-dashed border-border bg-muted text-[7px] text-muted-foreground">
+                                          IMG
+                                        </span>
+                                      )}
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    key={value.id}
+                                    type="button"
+                                    onClick={() => chooseOption(attribute.id, value.id)}
+                                    className={cn(
+                                      "rounded-full border px-3 py-1.5 text-xs transition",
+                                      isSelected
+                                        ? "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/20"
+                                        : "border-border hover:bg-surface",
+                                    )}
+                                  >
+                                    {value.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {selectedVariant ? (
+                      <div className="space-y-2 rounded-lg border border-border bg-accent/5 p-3 text-sm">
+                        <div className="font-semibold">
+                          {Object.entries(selectedVariant.options || {}).map(([attrId, valId], index) => {
+                            const attr = viewProduct.attributes.find((a) => a.id === attrId);
+                            const val = attr?.values.find((x) => x.id === valId);
+                            if (!attr || !val) return null;
+                            return (
+                              <span key={attrId}>
+                                {index > 0 && " / "}
+                                {attr.name}: <span className="text-muted-foreground">{val.label}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <div className="text-muted-foreground">
+                          <span className="font-semibold text-foreground">SKU : </span>
+                          {selectedVariant.sku || "—"}
+                        </div>
+                        <div className="mt-5 flex items-baseline gap-2 font-semibold">
+                          <span className="text-lg">{formatPrice(selectedVariant.cost_price ?? selectedVariant.price)}</span>
+                          {selectedVariant.cost_price != null && selectedVariant.cost_price !== selectedVariant.price && (
+                            <>
+                              <span className="text-md text-muted-foreground line-through">{formatPrice(selectedVariant.price)}</span>
+                              <span className="text-md font-bold text-destructive">
+                                -{Math.round(((selectedVariant.price - selectedVariant.cost_price) / selectedVariant.price) * 100)}%
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className={selectedVariant.stock === 0 ? "font-semibold text-destructive" : ""}>
+                          <div className="font-semibold">Stock :  <span className="text-muted-foreground">{selectedVariant.stock}</span></div>
+                        </div>
+                      </div>
+                    ) : isSelectionComplete ? (
+                      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                        Cette combinaison n'existe pas pour ce produit.
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="space-y-2 rounded-lg border border-border bg-accent/5 p-3 text-sm">
+                    <div><span className="text-muted-foreground">Prix global : </span><span className="font-semibold">{formatPrice(displayPrice)}</span></div>
+                    {globalDiscountPercent !== null && (
+                      <div>
+                        <span className="text-muted-foreground">Après promotion : </span>
+                        <span className="font-semibold text-accent-strong">{formatPrice(globalPromoPrice)}</span>
+                        <span className="ml-2 rounded bg-accent-strong/10 px-2 py-0.5 text-xs font-bold text-accent-strong">
+                          {globalDiscountPercent > 0 ? `-${globalDiscountPercent}%` : `+${Math.abs(globalDiscountPercent)}%`}
+                        </span>
+                      </div>
+                    )}
+                    {displayComparePrice && (
+                      <div>
+                        <span className="text-muted-foreground">Avant : </span>
+                        <span className="text-muted-foreground line-through">{formatPrice(displayComparePrice)}</span>
+                      </div>
+                    )}
+                    <div className={displayStock === 0 ? "font-semibold text-destructive" : ""}>
+                      <span className="text-muted-foreground">Stock : </span>{displayStock}
+                    </div>
+                  </div>
+                )}
+
+                {viewProduct.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {viewProduct.tags.map((t) => (
+                      <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-xs">{t}</span>
+                    ))}
+                  </div>
+                )}
+
+                
+              </div>
+
+              {(viewProduct.short_description || viewProduct.description) && (
+                <div className="space-y-4 text-sm lg:col-span-2">
+                  <h4 className="font-bold text-foreground">Description</h4>
+                  {viewProduct.short_description && (
+                    <p className="text-muted-foreground">{viewProduct.short_description}</p>
+                  )}
+                  {viewProduct.description && <RichText value={viewProduct.description} className="text-foreground" />}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 lg:col-span-2">
+                <Button variant="outline" onClick={() => setViewProduct(null)}>Fermer</Button>
+                <Button
+                  variant="accent"
+                  onClick={() => { setDraft(viewProduct); setRemovedAttributeIds([]); setShowRequiredErrors(false); setOpen(true); setViewProduct(null); setSelectedOptions({}); }}
+                >
+                  Éditer
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </DialogContent>
+    </Dialog>
+
+    {/* Confirm toggle dialog (activer / désactiver) */}
+    <Dialog open={Boolean(toggleConfirm)} onOpenChange={(v) => { if (!v) setToggleConfirm(null); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirmer</DialogTitle>
+        </DialogHeader>
+        <p>Voulez-vous vraiment {toggleConfirm?.next ? "activer" : "désactiver"} ce produit ?</p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setToggleConfirm(null)} disabled={isToggling}>Annuler</Button>
+          <Button
+            variant="accent"
+            onClick={async () => {
               if (!toggleConfirm) return;
               setIsToggling(true);
               const { id, next } = toggleConfirm;
-              setList(prev => prev.map(x => x.id === id ? { ...x, is_active: next } : x));
+              // optimistic
+              setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_active: next } : x)));
               try {
                 const { error } = await supabase.from("products").update({ is_active: next }).eq("id", id);
                 if (error) throw error;
@@ -573,87 +1389,147 @@ function AdminProducts() {
                 setToggleConfirm(null);
               } catch (err) {
                 console.error(err);
-                setList(prev => prev.map(x => x.id === id ? { ...x, is_active: !next } : x));
-                toast.error("Impossible de mettre à jour le statut.");
-              } finally { setIsToggling(false); }
-            }} disabled={isToggling}>
-              {isToggling ? <Spinner className="h-4 w-4" /> : toggleConfirm?.next ? "Activer" : "Désactiver"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* CONFIRM DELETE */}
-      <Dialog open={Boolean(confirmDeleteId)} onOpenChange={v => { if (!v) setConfirmDeleteId(null); }}>
-        <DialogContent className="max-w-md rounded-2xl border-green-100">
-          <DialogHeader>
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600"><Trash2 className="h-6 w-6" /></div>
-            <DialogTitle className="text-[#123b25]">Supprimer ce produit ?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm leading-relaxed text-gray-500">Cette action est irréversible. Le produit et ses images seront supprimés.</p>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={isDeleting} className="border-gray-200 text-gray-600 hover:bg-gray-50">Annuler</Button>
-            <Button className="bg-red-600 text-white hover:bg-red-700" disabled={isDeleting} onClick={async () => {
-              const id = confirmDeleteId;
-              if (!id || isDeleting) return;
-              setIsDeleting(true);
-              try {
-                const { data: imgs } = await supabase.from("product_images").select("url").eq("product_id", id);
-                for (const img of (imgs ?? []) as any[]) {
-                  const url = img?.url as string | undefined;
-                  if (!url) continue;
-                  const m = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
-                  if (m) { try { await deleteFromBucket(m[1]!, decodeURIComponent(m[2]!)); } catch (e) { console.warn(e); } }
-                }
-                await supabase.from("product_images").delete().eq("product_id", id);
-                const { error } = await supabase.from("products").delete().eq("id", id);
-                if (error) throw error;
-                setList(prev => prev.filter(x => x.id !== id));
-                toast.success("Produit supprimé.");
-              } catch (err) { console.error(err); toast.error("Impossible de supprimer le produit."); }
-              finally { setIsDeleting(false); setConfirmDeleteId(null); }
-            }}>
-              {isDeleting ? <Spinner className="h-4 w-4" /> : "Supprimer définitivement"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ADD / EDIT PRODUCT */}
-      <Dialog open={open} onOpenChange={v => { if (!isSaving) setOpen(v); }}>
-        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto rounded-2xl border-green-100 p-0">
-          <div className="border-b border-green-100 bg-green-50/50 px-6 py-5">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-green-100 p-2.5 text-green-700">{draft.id ? <Edit2 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}</div>
-                <div>
-                  <DialogTitle className="text-xl text-[#123b25]">{draft.id ? "Modifier le produit" : "Nouveau produit"}</DialogTitle>
-                  <p className="mt-1 text-xs text-gray-500">Gérez les informations, variantes et images de votre produit.</p>
-                </div>
+                // rollback
+                setList((prev) => prev.map((x) => (x.id === id ? { ...x, is_active: !next } : x)));
+                toast.error("Impossible de mettre à jour l'état du produit.");
+              } finally {
+                setIsToggling(false);
+              }
+            }}
+            disabled={isToggling}
+          >
+            {isToggling ? (
+              <div className="flex items-center gap-2">
+                <Spinner className="h-4 w-4" />
+                <span>Chargement...</span>
               </div>
-            </DialogHeader>
-          </div>
+            ) : toggleConfirm?.next ? "Activer" : "Désactiver"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
-          <div className="px-6 py-5">
-            <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-gray-100 p-1">
-                <TabsTrigger value="general" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-green-700 data-[state=active]:shadow-sm"><Package className="h-4 w-4" />Général</TabsTrigger>
-                <TabsTrigger value="variantes" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-green-700 data-[state=active]:shadow-sm"><SlidersHorizontal className="h-4 w-4" />Attributs</TabsTrigger>
-                <TabsTrigger value="images" className="gap-2 rounded-lg py-2.5 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-green-700 data-[state=active]:shadow-sm"><ImagePlus className="h-4 w-4" />Images</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="general" className="mt-5"><ProductGeneral draft={draft} setDraft={setDraft} categories={categoriesList} showRequiredErrors={showRequiredErrors} /></TabsContent>
-              <TabsContent value="variantes" className="mt-5"><AttributesVariants draft={draft} setDraft={setDraft} addAttribute={addAttribute} addValue={addValue} removeValue={removeValue} addVariant={addVariant} updateAttribute={updateAttribute} removeAttribute={removeAttribute} updateVariant={updateVariant} setVariantOption={setVariantOption} moveVariant={moveVariant} /></TabsContent>
-              <TabsContent value="images" className="mt-5"><ProductImages draft={draft} setDraft={setDraft} /></TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="flex flex-col-reverse gap-2 border-t border-green-100 bg-green-50/30 px-6 py-4 sm:flex-row sm:justify-end">
-            <Button variant="outline" className="rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => setOpen(false)} disabled={isSaving}>Annuler</Button>
-            <Button className="rounded-xl bg-green-700 px-6 text-white hover:bg-green-800" onClick={save} disabled={isSaving}>
-              {isSaving ? (<><Spinner className="mr-2 h-4 w-4" />Enregistrement...</>) : (<>{draft.id ? <Edit2 className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}{draft.id ? "Enregistrer les modifications" : "Créer le produit"}</>)}
+      {/* Confirm delete dialog */}
+      <Dialog open={Boolean(confirmDeleteId)} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+          </DialogHeader>
+          <p>Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={isDeleting}>Annuler</Button>
+            <Button
+              variant="accent"
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={async () => {
+                const id = confirmDeleteId;
+                if (!id || isDeleting) return;
+                setIsDeleting(true);
+                try {
+                  // fetch product images
+                  const { data: imgs, error: imgErr } = await supabase.from("product_images").select("url").eq("product_id", id);
+                  if (imgErr) throw imgErr;
+                  for (const img of (imgs ?? []) as any[]) {
+                    const url = img?.url as string | undefined;
+                    if (!url) continue;
+                    const m = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+                    if (m) {
+                      const bucket = m[1]!;
+                      const path = decodeURIComponent(m[2]!);
+                      try {
+                        await deleteFromBucket(bucket, path);
+                      } catch (e) {
+                        console.warn("failed to delete storage object", path, e);
+                      }
+                    }
+                  }
+                  // delete image rows
+                  const { error: delImgsErr } = await supabase.from("product_images").delete().eq("product_id", id);
+                  if (delImgsErr) throw delImgsErr;
+                  // delete product
+                  const { error } = await supabase.from("products").delete().eq("id", id);
+                  if (error) throw error;
+                  setList((p) => p.filter((x) => x.id !== id));
+                  toast.success("Produit supprimé.");
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Impossible de supprimer le produit.");
+                } finally {
+                  setIsDeleting(false);
+                  setConfirmDeleteId(null);
+                }
+              }}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner className="h-4 w-4" />
+                  Suppression...
+                </span>
+              ) : (
+                "Supprimer"
+              )}
             </Button>
-          </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{draft.id ? "Modifier le produit" : "Nouveau produit"}</DialogTitle>
+          </DialogHeader>
+
+         <Tabs defaultValue="general">
+          <TabsList>
+            <TabsTrigger value="general">Général</TabsTrigger>
+            <TabsTrigger value="variantes">Attributs</TabsTrigger>
+            <TabsTrigger value="images">Images</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <ProductGeneral
+              draft={draft}
+              setDraft={(p) => setDraft(p)}
+              categories={categoriesList}
+              showRequiredErrors={showRequiredErrors}
+            />
+          </TabsContent>
+
+          <TabsContent value="variantes">
+            <AttributesVariants
+              draft={draft}
+              setDraft={(p) => setDraft(p)}
+              addAttribute={addAttribute}
+              addValue={addValue}
+              removeValue={removeValue}
+              addVariant={addVariant}
+              updateAttribute={updateAttribute}
+              removeAttribute={removeAttribute}
+              updateVariant={updateVariant}
+              setVariantOption={setVariantOption}
+              moveVariant={moveVariant}
+            />
+          </TabsContent>
+
+          <TabsContent value="images">
+            <ProductImages draft={draft} setDraft={(p) => setDraft(p)} />
+          </TabsContent>
+        </Tabs>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>Annuler</Button>
+            <Button variant="accent" onClick={save} disabled={isSaving}>
+              {isSaving ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner className="h-4 w-4" />
+                  Modification...
+                </span>
+              ) : (
+                draft.id ? "Modifier" : "Enregistrer"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -55,14 +55,6 @@ function ConfirmationPage() {
             <Link to="/">Continuer mes achats</Link>
           </Button>
 
-          {settings?.phone && (
-            <Button variant="outline" asChild>
-              <a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}>
-                <Phone className="mr-2 h-4 w-4" />
-                Nous appeler
-              </a>
-            </Button>
-          )}
         </div>
       </div>
     </StoreLayout>
