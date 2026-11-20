@@ -27,7 +27,7 @@ function HeroTitle() {
             {/* ======================================================= */}
             <div
               aria-hidden="true"
-              className="absolute left-[8%] top-[60%] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
+              className="absolute left-[8%] top-[60%] h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
             />
 
             {/* ======================================================= */}
