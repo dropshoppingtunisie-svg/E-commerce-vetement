@@ -11,8 +11,8 @@
   display: flex;
   align-items: center;
 
-  background: #064b27;
-  color: #ffffff;
+  background: transparent;
+  color: inherit;
 
   border-bottom: 1px solid rgb(255 255 255 / 10%);
 }
@@ -97,3 +97,4 @@
     animation: none;
   }
 }
+ 

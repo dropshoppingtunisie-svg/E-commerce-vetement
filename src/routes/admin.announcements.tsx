@@ -29,7 +29,12 @@ type Announcement = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  background_color: string;
+  text_color: string;
 };
+
+const DEFAULT_BACKGROUND_COLOR = "#064b27";
+const DEFAULT_TEXT_COLOR = "#ffffff";
 
 function AnnouncementsPage() {
   const [items, setItems] = useState<Announcement[]>([]);
@@ -40,6 +45,11 @@ function AnnouncementsPage() {
   const [message, setMessage] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   const [active, setActive] = useState(true);
+
+  const [backgroundColor, setBackgroundColor] = useState(
+    DEFAULT_BACKGROUND_COLOR
+  );
+  const [textColor, setTextColor] = useState(DEFAULT_TEXT_COLOR);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -74,6 +84,8 @@ function AnnouncementsPage() {
     setMessage("");
     setSortOrder(items.length);
     setActive(true);
+    setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
+    setTextColor(DEFAULT_TEXT_COLOR);
     setError("");
     setSuccess("");
   }
@@ -83,8 +95,15 @@ function AnnouncementsPage() {
     setMessage(item.message);
     setSortOrder(item.sort_order);
     setActive(item.is_active);
+
+    setBackgroundColor(
+      item.background_color || DEFAULT_BACKGROUND_COLOR
+    );
+    setTextColor(item.text_color || DEFAULT_TEXT_COLOR);
+
     setSuccess("");
     setError("");
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -104,10 +123,15 @@ function AnnouncementsPage() {
       message: message.trim(),
       sort_order: sortOrder,
       is_active: active,
+      background_color: backgroundColor,
+      text_color: textColor,
     };
 
     const result = editingId
-      ? await db.from("announcements").update(payload).eq("id", editingId)
+      ? await db
+          .from("announcements")
+          .update(payload)
+          .eq("id", editingId)
       : await db.from("announcements").insert(payload);
 
     if (result.error) {
@@ -116,7 +140,12 @@ function AnnouncementsPage() {
       return;
     }
 
-    setSuccess(editingId ? "Annonce modifiée avec succès." : "Annonce ajoutée avec succès.");
+    setSuccess(
+      editingId
+        ? "Annonce modifiée avec succès."
+        : "Annonce ajoutée avec succès."
+    );
+
     resetForm();
     await loadAnnouncements();
     setSaving(false);
@@ -136,7 +165,12 @@ function AnnouncementsPage() {
       return;
     }
 
-    setSuccess(item.is_active ? "Annonce désactivée." : "Annonce activée.");
+    setSuccess(
+      item.is_active
+        ? "Annonce désactivée."
+        : "Annonce activée."
+    );
+
     await loadAnnouncements();
   }
 
@@ -150,7 +184,10 @@ function AnnouncementsPage() {
     setError("");
     setSuccess("");
 
-    const { error } = await db.from("announcements").delete().eq("id", item.id);
+    const { error } = await db
+      .from("announcements")
+      .delete()
+      .eq("id", item.id);
 
     if (error) {
       setError(error.message);
@@ -158,7 +195,11 @@ function AnnouncementsPage() {
     }
 
     setSuccess("Annonce supprimée avec succès.");
-    if (editingId === item.id) resetForm();
+
+    if (editingId === item.id) {
+      resetForm();
+    }
+
     await loadAnnouncements();
   }
 
@@ -176,9 +217,11 @@ function AnnouncementsPage() {
               <Megaphone size={17} />
               BUFANDA / COMMUNICATION
             </div>
+
             <h1 className="text-3xl font-bold tracking-tight text-[#123b25]">
               Annonces
             </h1>
+
             <p className="mt-2 text-sm text-gray-500">
               Gérez les messages affichés en haut de votre boutique.
             </p>
@@ -195,9 +238,23 @@ function AnnouncementsPage() {
 
         {/* STATISTICS */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total annonces" value={items.length} icon={<Megaphone size={21} />} />
-          <StatCard label="Annonces actives" value={activeCount} icon={<Eye size={21} />} />
-          <StatCard label="Annonces désactivées" value={inactiveCount} icon={<EyeOff size={21} />} />
+          <StatCard
+            label="Total annonces"
+            value={items.length}
+            icon={<Megaphone size={21} />}
+          />
+
+          <StatCard
+            label="Annonces actives"
+            value={activeCount}
+            icon={<Eye size={21} />}
+          />
+
+          <StatCard
+            label="Annonces désactivées"
+            value={inactiveCount}
+            icon={<EyeOff size={21} />}
+          />
         </div>
 
         {/* MESSAGES */}
@@ -217,20 +274,28 @@ function AnnouncementsPage() {
 
         {/* FORM */}
         <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
+
           <div className="border-b border-gray-100 p-5 md:p-6">
             <h2 className="text-lg font-bold text-[#123b25]">
               {editingId ? "Modifier l'annonce" : "Créer une annonce"}
             </h2>
+
             <p className="mt-1 text-sm text-gray-500">
               Écrivez le texte qui sera affiché dans la barre supérieure.
             </p>
           </div>
 
-          <form onSubmit={saveAnnouncement} className="space-y-5 p-5 md:p-6">
+          <form
+            onSubmit={saveAnnouncement}
+            className="space-y-5 p-5 md:p-6"
+          >
+
+            {/* MESSAGE */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
                 Contenu du message
               </label>
+
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -240,24 +305,31 @@ function AnnouncementsPage() {
                 required
                 className="w-full resize-y rounded-xl border border-green-200 bg-gray-50 p-4 text-sm outline-none transition focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-100"
               />
+
               <div className="mt-2 flex justify-between text-xs text-gray-400">
                 <span>Maximum 300 caractères</span>
                 <span>{message.length}/300</span>
               </div>
             </div>
 
+            {/* ORDER AND STATUS */}
             <div className="grid gap-5 sm:grid-cols-2">
+
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
                   Ordre d'affichage
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(Number(e.target.value))}
+                  onChange={(e) =>
+                    setSortOrder(Number(e.target.value))
+                  }
                   className="w-full rounded-xl border border-green-200 bg-gray-50 px-4 py-3 outline-none focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-100"
                 />
+
                 <p className="mt-1 text-xs text-gray-400">
                   Les petits nombres apparaissent en premier.
                 </p>
@@ -267,6 +339,7 @@ function AnnouncementsPage() {
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
                   État de l'annonce
                 </label>
+
                 <button
                   type="button"
                   onClick={() => setActive(!active)}
@@ -276,7 +349,10 @@ function AnnouncementsPage() {
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
-                  <span>{active ? "Annonce active" : "Annonce désactivée"}</span>
+                  <span>
+                    {active ? "Annonce active" : "Annonce désactivée"}
+                  </span>
+
                   <span
                     className={`h-6 w-11 rounded-full p-1 transition ${
                       active ? "bg-green-600" : "bg-gray-300"
@@ -292,25 +368,120 @@ function AnnouncementsPage() {
               </div>
             </div>
 
+            {/* COLORS */}
+            <div className="rounded-xl border border-green-100 bg-gray-50 p-5">
+              <h3 className="mb-4 font-semibold text-gray-800">
+                Personnalisation des couleurs
+              </h3>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+
+                {/* BACKGROUND COLOR */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Couleur du fond
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(e) =>
+                        setBackgroundColor(e.target.value)
+                      }
+                      className="h-12 w-16 cursor-pointer rounded-lg border border-gray-200 bg-white p-1"
+                    />
+
+                    <input
+                      type="text"
+                      value={backgroundColor}
+                      onChange={(e) =>
+                        setBackgroundColor(e.target.value)
+                      }
+                      pattern="^#[0-9A-Fa-f]{6}$"
+                      maxLength={7}
+                      className="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* TEXT COLOR */}
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Couleur du texte
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={textColor}
+                      onChange={(e) =>
+                        setTextColor(e.target.value)
+                      }
+                      className="h-12 w-16 cursor-pointer rounded-lg border border-gray-200 bg-white p-1"
+                    />
+
+                    <input
+                      type="text"
+                      value={textColor}
+                      onChange={(e) =>
+                        setTextColor(e.target.value)
+                      }
+                      pattern="^#[0-9A-Fa-f]{6}$"
+                      maxLength={7}
+                      className="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-gray-500">
+                Choisissez les couleurs avec le sélecteur ou saisissez un code HEX.
+              </p>
+            </div>
+
             {/* PREVIEW */}
-            <div className="overflow-hidden rounded-xl border border-green-200 shadow-sm">
-              <div className="bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-green-100">
+            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+
+              <div className="bg-gray-100 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-600">
                 Aperçu de l'annonce
               </div>
-              <div className="bg-green-700 px-5 py-5 text-center text-sm font-medium text-white">
+
+              <div
+                className="px-5 py-5 text-center text-sm font-semibold"
+                style={{
+                  backgroundColor,
+                  color: textColor,
+                }}
+              >
                 {message.trim() || "Votre message apparaîtra ici..."}
               </div>
             </div>
 
             {/* ACTIONS */}
             <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-5">
+
               <button
                 type="submit"
-                disabled={saving || !message.trim()}
+                disabled={
+                  saving ||
+                  !message.trim() ||
+                  !/^#[0-9A-Fa-f]{6}$/.test(backgroundColor) ||
+                  !/^#[0-9A-Fa-f]{6}$/.test(textColor)
+                }
                 className="flex items-center gap-2 rounded-xl bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                {saving ? "Enregistrement..." : editingId ? "Enregistrer les modifications" : "Ajouter l'annonce"}
+                {saving ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Check size={18} />
+                )}
+
+                {saving
+                  ? "Enregistrement..."
+                  : editingId
+                    ? "Enregistrer les modifications"
+                    : "Ajouter l'annonce"}
               </button>
 
               {editingId && (
@@ -329,31 +500,53 @@ function AnnouncementsPage() {
 
         {/* ANNOUNCEMENT LIST */}
         <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
+
           <div className="flex items-center justify-between border-b border-gray-100 p-5 md:p-6">
             <div>
-              <h2 className="text-lg font-bold text-[#123b25]">Liste des annonces</h2>
-              <p className="mt-1 text-sm text-gray-500">Gérez toutes vos annonces enregistrées.</p>
+              <h2 className="text-lg font-bold text-[#123b25]">
+                Liste des annonces
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Gérez toutes vos annonces enregistrées.
+              </p>
             </div>
+
             <button
               onClick={loadAnnouncements}
               disabled={loading}
               title="Actualiser"
               className="rounded-xl border border-green-200 p-3 text-green-700 hover:bg-green-50"
             >
-              <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+              <RefreshCw
+                size={18}
+                className={loading ? "animate-spin" : ""}
+              />
             </button>
           </div>
 
           <div className="divide-y divide-gray-100">
             {loading ? (
               <div className="flex justify-center p-12">
-                <Loader2 className="animate-spin text-green-700" size={30} />
+                <Loader2
+                  className="animate-spin text-green-700"
+                  size={30}
+                />
               </div>
             ) : items.length === 0 ? (
               <div className="p-12 text-center">
-                <Megaphone className="mx-auto mb-3 text-gray-300" size={40} />
-                <h3 className="font-semibold text-gray-700">Aucune annonce</h3>
-                <p className="mt-1 text-sm text-gray-400">Créez votre première annonce.</p>
+                <Megaphone
+                  className="mx-auto mb-3 text-gray-300"
+                  size={40}
+                />
+
+                <h3 className="font-semibold text-gray-700">
+                  Aucune annonce
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-400">
+                  Créez votre première annonce.
+                </p>
               </div>
             ) : (
               items.map((item) => (
@@ -362,11 +555,16 @@ function AnnouncementsPage() {
                   className="flex flex-col gap-4 p-5 transition hover:bg-green-50/30 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0 flex-1">
+
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">
-                        <ArrowUpDown size={12} className="mr-1 inline" />
+                        <ArrowUpDown
+                          size={12}
+                          className="mr-1 inline"
+                        />
                         Ordre {item.sort_order}
                       </span>
+
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                           item.is_active
@@ -378,16 +576,38 @@ function AnnouncementsPage() {
                       </span>
                     </div>
 
-                    <p className="break-words font-medium leading-relaxed text-gray-800">
-                      {item.message}
-                    </p>
+                    {/* ANNOUNCEMENT PREVIEW IN LIST */}
+                    <div
+                      className="rounded-lg px-4 py-3 text-sm font-medium"
+                      style={{
+                        backgroundColor:
+                          item.background_color || DEFAULT_BACKGROUND_COLOR,
+                        color: item.text_color || DEFAULT_TEXT_COLOR,
+                      }}
+                    >
+                      <p className="break-words leading-relaxed">
+                        {item.message}
+                      </p>
+                    </div>
+
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="text-xs text-gray-400">
+                        Fond : {item.background_color || DEFAULT_BACKGROUND_COLOR}
+                      </span>
+
+                      <span className="text-xs text-gray-400">
+                        Texte : {item.text_color || DEFAULT_TEXT_COLOR}
+                      </span>
+                    </div>
 
                     <p className="mt-2 text-xs text-gray-400">
-                      Créée le {new Date(item.created_at).toLocaleDateString("fr-FR")}
+                      Créée le{" "}
+                      {new Date(item.created_at).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
+
                     <button
                       onClick={() => toggleAnnouncement(item)}
                       title={item.is_active ? "Désactiver" : "Activer"}
@@ -397,7 +617,11 @@ function AnnouncementsPage() {
                           : "bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-700"
                       }`}
                     >
-                      {item.is_active ? <Eye size={18} /> : <EyeOff size={18} />}
+                      {item.is_active ? (
+                        <Eye size={18} />
+                      ) : (
+                        <EyeOff size={18} />
+                      )}
                     </button>
 
                     <button
@@ -441,6 +665,7 @@ function StatCard({
       <div className="rounded-xl bg-green-50 p-3 text-green-700">
         {icon}
       </div>
+
       <div>
         <p className="text-sm text-gray-500">{label}</p>
         <p className="text-2xl font-bold text-[#123b25]">{value}</p>

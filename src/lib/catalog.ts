@@ -236,9 +236,11 @@ export type Banner = {
   position: number;
   /** How many products are attached to the banner (see admin/banners "Produits associés"). */
   products_count: number;
+  media_type: "image" | "video";
 };
 
-const BANNER_SELECT = "id, title, subtitle, image_url, link_url, position";
+const BANNER_SELECT =
+  "id, title, subtitle, image_url, link_url, position, media_type";
 
 /** Product counts per banner. Best-effort: a failure must never hide the hero carousel. */
 async function fetchBannerProductCounts(bannerIds: string[]): Promise<Map<string, number>> {

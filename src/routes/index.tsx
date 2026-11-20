@@ -29,6 +29,7 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -38,11 +39,26 @@ function HomePage() {
     return () => { mounted = false; };
   }, []);
 
-  useEffect(() => {
-    if (!carouselApi || banners.length <= 1) return;
-    const id = setInterval(() => carouselApi.scrollNext(), 6000);
-    return () => clearInterval(id);
-  }, [carouselApi, banners.length]);
+useEffect(() => {
+  if (!carouselApi || banners.length <= 1) return;
+
+  const updateCurrentSlide = () => {
+    setCurrentBannerIndex(carouselApi.selectedScrollSnap());
+  };
+
+  updateCurrentSlide();
+
+  carouselApi.on("select", updateCurrentSlide);
+
+  const id = setInterval(() => {
+    carouselApi.scrollNext();
+  }, 6000);
+
+  return () => {
+    clearInterval(id);
+    carouselApi.off("select", updateCurrentSlide);
+  };
+}, [carouselApi, banners.length]);
 
   const promos = products.filter(isOnSale).slice(0, 4);
   const nouveautes = products.filter(p => p.is_new).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 4);
@@ -61,66 +77,125 @@ function HomePage() {
 
   return (
     <StoreLayout>
-      {/* 1. BANNIÈRES CAROUSEL (Arrondies et modernes) */}
+      {/* 1. BANNIÈRES CAROUSEL */}
       {banners.length > 0 && (
         <section className="container-page pt-6 pb-12">
           <div className="overflow-hidden rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <Carousel setApi={setCarouselApi} opts={{ loop: true }}>
+
+            <Carousel
+              setApi={setCarouselApi}
+              opts={{
+                loop: true,
+                align: "start",
+              }}
+            >
               <CarouselContent>
-                {banners.map((banner) => {
+                {banners.map((banner, index) => {
+                  const isActiveSlide = index === currentBannerIndex;
+
                   const slide = (
                     <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-[#edf3ed] sm:aspect-[16/7] lg:aspect-[21/8]">
-                      <img
-                        src={banner.image_url}
-                        alt={banner.title ?? "Collection Bufanda"}
-                        loading="eager"
-                        className="absolute inset-0 h-full w-full object-contain object-center"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/10 to-transparent" />
+
+                      {/* AFFICHAGE VIDÉO OU IMAGE */}
+                      {banner.media_type === "video" ? (
+                        <video
+                          key={`${banner.id}-${banner.image_url}`}
+                          src={banner.image_url}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          controls={false}
+                          preload="auto"
+                          className="absolute inset-0 h-full w-full object-contain object-center"
+                          onError={(event) => {
+                            console.error("Erreur de chargement vidéo :", banner.image_url);
+                            console.error(event.currentTarget.error);
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={banner.image_url}
+                          alt={banner.title ?? "Collection Bufanda"}
+                          loading={index === 0 ? "eager" : "lazy"}
+                          className="absolute inset-0 h-full w-full object-contain object-center"
+                        />
+                      )}
+
+                      {/* VOILE DÉGRADÉ */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/50 via-black/10 to-transparent" />
+
+                      {/* TEXTE */}
                       {(banner.title || banner.subtitle) && (
-                        <div className="absolute inset-0 flex flex-col items-start justify-center p-8 text-white sm:p-14 lg:p-20">
+                        <div className="pointer-events-none absolute inset-0 flex flex-col items-start justify-center p-8 text-white sm:p-14 lg:p-20">
+
                           <span className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/80 sm:text-sm">
                             Bufanda
                           </span>
+
                           {banner.title && (
                             <h2 className="max-w-2xl font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
                               {banner.title}
                             </h2>
                           )}
+
                           {banner.subtitle && (
                             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/85 sm:text-base">
                               {banner.subtitle}
                             </p>
                           )}
+
                           <span className="mt-8 inline-flex items-center gap-3 border border-white/50 bg-white/10 px-6 py-3 text-xs font-semibold uppercase tracking-wider backdrop-blur-sm transition-all hover:bg-white hover:text-black sm:mt-10">
                             Découvrir la collection
                             <ArrowRight className="h-4 w-4" />
                           </span>
+
                         </div>
                       )}
                     </div>
                   );
+
                   return (
                     <CarouselItem key={banner.id}>
                       {banner.products_count > 0 ? (
-                        <Link to="/banniere/$id" params={{ id: banner.id }} className="block">{slide}</Link>
+                        <Link
+                          to="/banniere/$id"
+                          params={{ id: banner.id }}
+                          className="block"
+                        >
+                          {slide}
+                        </Link>
                       ) : (
-                        <a href={isSafeUrl(banner.link_url) ? banner.link_url : "/promotions"} className="block">{slide}</a>
+                        <a
+                          href={
+                            isSafeUrl(banner.link_url)
+                              ? banner.link_url
+                              : "/promotions"
+                          }
+                          className="block"
+                        >
+                          {slide}
+                        </a>
                       )}
                     </CarouselItem>
                   );
                 })}
               </CarouselContent>
+
+              {/* FLÈCHES DE NAVIGATION */}
               {banners.length > 1 && (
                 <>
                   <CarouselPrevious className="left-4 border-none bg-white/80 text-black backdrop-blur-sm hover:bg-white sm:left-8" />
+
                   <CarouselNext className="right-4 border-none bg-white/80 text-black backdrop-blur-sm hover:bg-white sm:right-8" />
                 </>
               )}
             </Carousel>
+
           </div>
         </section>
       )}
+
 
       {/* 2. SERVICES (Avec des icônes plus douces) */}
       <section className="container-page py-8 border-b border-gray-100 mb-12">
