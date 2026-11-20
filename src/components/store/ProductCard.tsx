@@ -7,8 +7,18 @@ import { useStore } from "@/context/StoreContext";
 import { cn } from "@/lib/utils";
 import { Stars } from "./Stars";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+    product,
+  }: {
+    product?: Product | null;
+  }) {
   const { addItem, toggleWishlist, isWishlisted } = useStore();
+
+  // Protection contre les données manquantes
+  if (!product?.id) {
+    console.warn("ProductCard: produit invalide", product);
+    return null;
+  }
   const liked = isWishlisted(product.id);
   const outOfStock = product.stock === 0;
   const hasVariants = product.variants.length > 0;

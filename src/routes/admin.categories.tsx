@@ -483,11 +483,10 @@ function AdminCategories() {
       </div>
 
       {/* STATISTICS */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 ">
         <StatCard title="Total catégories" value={statistics.total} description="Toutes les catégories" icon={FolderTree} iconClassName="bg-green-50 text-green-700" />
         <StatCard title="Catégories principales" value={statistics.mainCategories} description="Niveaux principaux" icon={Folder} iconClassName="bg-green-50 text-green-700" />
         <StatCard title="Sous-catégories" value={statistics.subCategories} description="Catégories secondaires" icon={Layers} iconClassName="bg-green-50 text-green-700" />
-        <StatCard title="Sous-catégories associées" value={statistics.totalProducts} description="Total des sous-catégories déclarées" icon={Package} iconClassName="bg-green-50 text-green-700" />
       </div>
 
       {/* CATEGORY MANAGEMENT */}

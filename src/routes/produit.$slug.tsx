@@ -427,11 +427,14 @@ function ProductPage() {
         if (!mounted) return;
 
         setRelated(
-          data
+          (data ?? [])
             .filter(
-              (item) =>
-                item.id !== product.id &&
-                item.category_id === product.category_id,
+              (item): item is Product =>
+                Boolean(
+                  item?.id &&
+                  item.id !== product.id &&
+                  item.category_id === product.category_id
+                ),
             )
             .slice(0, 4),
         );
@@ -1526,12 +1529,14 @@ function ProductPage() {
             </div>
 
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-              {related.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  item={item}
-                />
-              ))}
+              {related
+                .filter((item): item is Product => Boolean(item?.id))
+                .map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    product={item}
+                  />
+                ))}
             </div>
           </section>
         )}
