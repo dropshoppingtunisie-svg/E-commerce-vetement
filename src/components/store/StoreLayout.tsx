@@ -11,7 +11,7 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 
 function HeroTitle() {
   return (
-    <section className="relative overflow-hidden bg-[#dcebc5] py-16 sm:py-24">
+    <section className="relative overflow-hidden bg-[#dcebc5] py-20 sm:py-28">
       {/* Formes organiques de fond */}
       <div
         className="absolute top-1/4 -left-20 h-96 w-96 rounded-full bg-[#ded5b5]/70 blur-3xl animate-pulse"
@@ -29,10 +29,20 @@ function HeroTitle() {
       />
 
       <div className="container-page relative z-10">
-        <div className="flex justify-center">
-          
-          {/* Conteneur du titre et logo */}
-          <div className="relative inline-flex flex-col items-center">
+        <div className="flex justify-center text-center">
+          <div className="relative inline-block">
+
+            {/* Cercle décoratif gauche derrière le B */}
+            <div
+              aria-hidden="true"
+              className="absolute left-[8%] top-[30%] h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
+            />
+
+            {/* Cercle décoratif droite derrière le N */}
+            <div
+              aria-hidden="true"
+              className="absolute left-[78%] top-[12%] h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
+            />
 
             {/* Titre BUFANDA */}
             <h1
@@ -46,9 +56,8 @@ function HeroTitle() {
               BUFANDA
             </h1>
 
-            {/* Logo en dessous et à droite */}
+            {/* Logo circulaire en dessous et à droite */}
             <div className="relative mt-2 ml-auto h-[110px] w-[110px] sm:h-[150px] sm:w-[150px] lg:h-[170px] lg:w-[170px]">
-
               <svg
                 viewBox="0 0 120 120"
                 className="h-full w-full"
@@ -85,13 +94,8 @@ function HeroTitle() {
                   </text>
                 </g>
 
-                {/* Cercle noir central */}
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="25"
-                  fill="#14110e"
-                />
+                {/* Cercle noir */}
+                <circle cx="60" cy="60" r="25" fill="#14110e" />
 
                 {/* Lettre B */}
                 <text
@@ -106,13 +110,13 @@ function HeroTitle() {
                   B
                 </text>
               </svg>
-
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Animation */}
+      {/* Animation du texte circulaire */}
       <style>
         {`
           @keyframes bufanda-spin {
