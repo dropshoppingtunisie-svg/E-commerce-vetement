@@ -11,7 +11,7 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 
 function HeroTitle() {
   return (
-    <section className="relative overflow-hidden bg-[#dcebc5] py-20 sm:py-28">
+    <section className="relative overflow-hidden bg-[#dcebc5] pt-12 pb-4 sm:pt-16 sm:pb-6">
       {/* Formes organiques de fond */}
       <div
         className="absolute top-1/4 -left-20 h-96 w-96 rounded-full bg-[#ded5b5]/70 blur-3xl animate-pulse"
@@ -60,7 +60,7 @@ function HeroTitle() {
             </h1>
 
             {/* Logo circulaire */}
-            <div className="relative mt-2 ml-auto h-[110px] w-[110px] sm:h-[150px] sm:w-[150px] lg:h-[170px] lg:w-[170px]">
+            <div className="relative mt-0 ml-auto h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] lg:h-[140px] lg:w-[140px]">
               <svg
                 viewBox="0 0 120 120"
                 className="h-full w-full"
