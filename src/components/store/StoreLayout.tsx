@@ -31,18 +31,21 @@ function HeroTitle() {
       <div className="container-page relative z-10">
         <div className="flex justify-center text-center">
           <div className="relative inline-block">
-
-            {/* Cercle décoratif gauche derrière le B */}
+            {/* Cercle gauche derrière le B */}
             <div
               aria-hidden="true"
-              className="absolute left-[8%] top-[30%] h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
-            />
+              className="absolute left-[8%] top-[30%] -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="h-[150px] w-[150px] rounded-full bg-[#cdbb9e]/80 animate-circle-left" />
+            </div>
 
-            {/* Cercle décoratif droite derrière le N */}
+            {/* Cercle droite derrière le N */}
             <div
               aria-hidden="true"
-              className="absolute left-[78%] top-[12%] h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#cdbb9e]/80"
-            />
+              className="absolute left-[78%] top-[12%] -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="h-[120px] w-[120px] rounded-full bg-[#cdbb9e]/80 animate-circle-right" />
+            </div>
 
             {/* Titre BUFANDA */}
             <h1
@@ -56,7 +59,7 @@ function HeroTitle() {
               BUFANDA
             </h1>
 
-            {/* Logo circulaire en dessous et à droite */}
+            {/* Logo circulaire */}
             <div className="relative mt-2 ml-auto h-[110px] w-[110px] sm:h-[150px] sm:w-[150px] lg:h-[170px] lg:w-[170px]">
               <svg
                 viewBox="0 0 120 120"
@@ -111,20 +114,63 @@ function HeroTitle() {
                 </text>
               </svg>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Animation du texte circulaire */}
+      {/* Animations */}
       <style>
         {`
+          /* Rotation du logo */
           @keyframes bufanda-spin {
             from {
               transform: rotate(0deg);
             }
             to {
               transform: rotate(360deg);
+            }
+          }
+
+          /* Mouvement organique du cercle gauche */
+          @keyframes circle-left-float {
+            0%, 100% {
+              transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            }
+
+            33% {
+              transform: translate3d(20px, -30px, 0) scale(1.06) rotate(6deg);
+            }
+
+            66% {
+              transform: translate3d(-15px, 20px, 0) scale(0.97) rotate(-4deg);
+            }
+          }
+
+          /* Mouvement organique du cercle droite */
+          @keyframes circle-right-float {
+            0%, 100% {
+              transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            }
+
+            50% {
+              transform: translate3d(-25px, 25px, 0) scale(1.12) rotate(3deg);
+            }
+          }
+
+          .animate-circle-left {
+            animation: circle-left-float 26s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          .animate-circle-right {
+            animation: circle-right-float 18s ease-in-out infinite;
+            will-change: transform;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .animate-circle-left,
+            .animate-circle-right {
+              animation: none !important;
             }
           }
         `}
